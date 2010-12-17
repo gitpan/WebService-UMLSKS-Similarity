@@ -1,0 +1,222 @@
+
+=head1 NAME
+
+run_query - Query UMLS web services with the query arguments like query term and method name.
+
+=head1 SYNOPSIS
+
+=head2 Basic Usage
+
+  use WebService::UMLS::run_query;
+  use WebService::UMLS::authenticate_user;
+
+  my $query = new Query;
+  my $c = new Connect;
+  my $method_name = 'findCUIByExact';
+  
+  $cui = $query->runQuery(
+		$service,
+		$method_name,
+		{
+			casTicket => $c->get_pt(),
+			searchString => SOAP::Data->type(string => $term),
+			language     => 'ENG',
+			release      => '2009AA',
+			includeSuppressibles => 'false',
+		},
+	);
+
+  $query -> runQuery($service, $query_term, $method_name, @params);
+
+
+=head1 DESCRIPTION
+
+This module has package Query which has many subroutines like 'new', 'runQuery' and serialization methods.
+This module takes $service object, query term, method name and different parameters of query as arguments.
+For valid CUI, it queries UMLS and gets back the hash reference of the information.
+
+=head2 Methods
+
+new: This sub creates a new object of Query.
+
+runQuery: This sub takes $service object, query term, method name and different parameters of query as arguments.
+It returns empty if the term does not exist in database or if the web services are not working correctly.
+It returns CUI if the query input was a term.
+If the query input is CUI, it displays preferred term, definitions with source information and CUI for it.
+
+Serialization subs: These are SOAP methods for serializing UMLS specific types.
+There is one SOAP::Serializer::as_XXX method for each complex type XXX found in the UMLSKS Web Service methods.
+
+
+=head1 SEE ALSO
+
+get_validate_term.pm  get_user_details.pm   authenticate_user.pm  ws-getUMLSInfo.pl ws-getShortestPath.pl
+
+=cut
+
+
+###############################################################################
+##########  CODE STARTS HERE  #################################################
+
+use SOAP::Lite;
+use warnings;
+use strict;
+
+package Query;
+
+sub new {
+	my $class = shift;
+	my $self  = {};
+	bless( $self, $class );
+	return $self;
+}
+
+sub runQuery {
+	my $self        = shift;
+	my $service     = shift;
+	my $qterm = shift;
+	my $method_name = shift;
+	my @params      = @_;
+
+	#warn sprintf "----> %s(%s)\n", $method_name, join(', ', @params);
+
+	# Calling the UMLSKS Web service and receiving the hash reference.
+
+	my $object_ref = $service->$method_name(@params);
+	
+	
+	# If the returned reference is not defined then display error message.
+	
+	unless ( defined $object_ref ) {
+		#print "No information for this CUI.";
+		return 'empty';
+	}
+	else {
+
+		# If the returned contents array is empty then display error message.
+
+		my $contents_ref = $object_ref->{"contents"};
+		if ( !@$contents_ref ) {
+
+			# if content_ref is empty
+			#	print
+			#	"There is no information for your query term/CUI in database.";
+			return 'empty';
+
+		}
+
+# If UMLSKS returns a defined hash reference then, store and print the information received.
+
+		else {
+
+			if ( $method_name =~ /findCUIByExact/ ) {
+
+				my $contents_ref = $object_ref->{"contents"};
+				foreach my $val (@$contents_ref) {
+					while ( my ( $key, $value ) = each(%$val) ) {
+						if ( $key =~ /CUI/ ) {					
+							my $cui = $value;
+							return $cui;
+						}
+					}
+				}
+			}
+			else {
+					return $object_ref;
+
+			
+			}
+		}
+	}
+}
+
+#-------Following code is taken from the reference program provided by Olivier B.
+#-------and is modified according to the need of the application.
+
+# UMLSKS returns the information of UMLSKS specific type, so we have create
+# a SOAP serializer for each UMLSKS WS mwthods.
+
+# serialization -- UMLSKS-specific types
+
+# NB: create one SOAP::Serializer::as_XXX
+#     for each complex type XXX found in the UMLSKS WS methods
+#     (see the WSDL file)
+
+sub SOAP::Serializer::as_CurrentUMLSRequest {
+	my ( $self, $value, $name, $type, $attr ) = @_;
+	return [ $name, { 'xsi:type' => 'CurrentUMLSRequest', %$attr }, $value ];
+}
+
+sub SOAP::Serializer::as_ConceptIdExactRequest {
+	my ( $self, $value, $name, $type, $attr ) = @_;
+	return [ $name, { 'xsi:type' => 'ConceptIdExactRequest', %$attr }, $value ];
+}
+
+
+sub SOAP::Serializer::as_ConceptIdWordRequest {
+	my ( $self, $value, $name, $type, $attr ) = @_;
+	return [ $name, { 'xsi:type' => 'ConceptIdWordRequest', %$attr }, $value ];
+}
+
+sub SOAP::Serializer::as_SourceRequest {
+	my ( $self, $value, $name, $type, $attr ) = @_;
+	return [ $name, { 'xsi:type' => 'SourceRequest', %$attr }, $value ];
+}
+
+sub SOAP::Serializer::as_RestrictedSearchStringRequest {
+	my ( $self, $value, $name, $type, $attr ) = @_;
+	return [
+		$name, { 'xsi:type' => 'RestrictedSearchStringRequest', %$attr }, $value
+	];
+}
+
+sub SOAP::Serializer::as_ConceptRequest {
+	my ( $self, $value, $name, $type, $attr ) = @_;
+	return [ $name, { 'xsi:type' => 'ConceptRequest', %$attr }, $value ];
+}
+
+sub SOAP::Serializer::as_TermGroup {
+	my ( $self, $value, $name, $type, $attr ) = @_;
+	return [ $name, { 'xsi:type' => 'TermGroup', %$attr }, $value ];
+}
+
+1;
+
+#-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
+
+
+
+=head1 AUTHORS
+
+Mugdha Choudhari             University of Minnesota Duluth
+                             E<lt>chou0130 at d.umn.eduE<gt>
+
+Ted Pedersen,                University of Minnesota Duluth
+                             E<lt>tpederse at d.umn.eduE<gt>
+
+
+
+
+=head1 COPYRIGHT
+
+Copyright (C) 2010, Mugdha Choudhari, Ted Pedersen
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to 
+The Free Software Foundation, Inc., 
+59 Temple Place - Suite 330, 
+Boston, MA  02111-1307, USA.
+
+=cut
+
+#---------------------------------PERLDOC ENDS HERE---------------------------------------------------------------

@@ -1,0 +1,166 @@
+=head1 NAME
+
+authenticate - Authenticate the user before accessing UMLSKS with valid username and password.
+
+=head1 SYNOPSIS
+
+=head2 Basic Usage
+
+    use WebService::UMLS::authenticate_user;
+
+    print "Enter username to connect to UMLSKS:";
+	my $username = <>;
+	print "Enter password:";
+	ReadMode 'noecho';
+	my $pwd = ReadLine 0;
+	ReadMode 'normal';
+	my $c = new Connect;
+	my $service = $c->connect_umls( $username, $pwd );
+
+
+=head1 DESCRIPTION
+
+This module has package Connect which has three subroutines 'new', 'get_pt' and 'connect_umls'.
+This module takes the username and password from getUserDetails module and connects to the authentication server.
+It returns a valid proxy ticket if the user is valid or returns an invalid service object if UMLS sends an invalid proxy ticket.
+
+=head2 Methods
+
+new: This sub creates a new object of Connect 
+
+connect_umls:This sub takes username and password as arguments 
+and returns a proxy ticket object after it authenticates the user.
+
+get_pt: This sub returns a proxy ticket.
+
+=head1 SEE ALSO
+
+get_validate_term.pm  get_user_details.pm  run_query.pm  ws-getUMLSInfo.pl 
+
+=over
+
+=cut
+
+###############################################################################
+##########  CODE STARTS HERE  #################################################
+
+
+# This module has package Connect which has three subroutines 'new', 'get_pt' and 'connect_umls'.
+
+#use lib "/home/mugdha/workspace/getInfo";
+use warnings;
+use SOAP::Lite;
+use strict;
+no warnings qw/redefine/; #http://www.perlmonks.org/?node_id=582220
+package ConnectUMLS;
+
+# This sub creates a new object of Connect
+
+sub new {
+	my $class = shift;
+	my $self  = {};
+	bless( $self, $class );
+	return $self;
+}
+
+#-------Following code is taken from the reference program provided by Olivier B.
+#-------and is modified according to the need of the application.
+
+# These are the Universal Resource Identifier for WSDL and authentication service.
+# These URIs will be used for authentication of the user.
+# Please see 'http://umlsks.nlm.nih.gov/DocPortlet/html/dGuide/appls/appls1.html' for details.
+
+my $KSAUTH_WSDL_URI = 'http://mor.nlm.nih.gov/auth-ob.wsdl';
+my $UMLSKS_WSDL_URI =
+  'http://umlsks.nlm.nih.gov/UMLSKS/services/UMLSKSService?WSDL';
+my $UMLSKS_URI = 'http://umlsks.nlm.nih.gov';
+my $pt_service;
+my $pgt;
+
+sub connect_umls {
+	my $self     = shift;
+	my $username = shift;
+	my $pwd      = shift;
+	my $verbose  = shift;
+
+	# Initialize Authentication service.
+
+	$pt_service = SOAP::Lite->service($KSAUTH_WSDL_URI);
+
+	# Get proxy granting ticket.
+
+	$pgt = $pt_service->getProxyGrantTicket( $username, $pwd );
+
+	# If proxy granting ticket is not defined dispalying the error message.
+
+	if ( not defined $pgt ) {
+		print "You entered wrong username or password";
+		return 0;
+	}
+
+	# If pgt is obtained, user is a valid user.
+
+	else {
+		printf "\nProxy granting ticket : %s\n", $pgt if $verbose;
+
+		# Get proxy ticket.
+
+		my $pt = get_pt();
+		printf "\n Proxy Ticket: %s\n", $pt if $verbose;
+
+		# Initialize UMLSKS service.
+
+		my $service = SOAP::Lite->service($UMLSKS_WSDL_URI);
+		print "\n service=$service\n" if $verbose;
+		return $service;
+
+	}
+
+}
+
+# This sub returns the proxy ticket.
+
+sub get_pt {
+	return $pt_service->getProxyTicket( $pgt, $UMLSKS_URI );
+}
+
+1;
+
+#-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
+
+=back
+
+=head1 AUTHORS
+
+Mugdha Choudhari             University of Minnesota Duluth
+                             E<lt>chou0130 at d.umn.eduE<gt>
+
+Ted Pedersen,                University of Minnesota Duluth
+                             E<lt>tpederse at d.umn.eduE<gt>
+
+
+
+
+=head1 COPYRIGHT
+
+Copyright (C) 2010, Mugdha Choudhari, Ted Pedersen
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to 
+The Free Software Foundation, Inc., 
+59 Temple Place - Suite 330, 
+Boston, MA  02111-1307, USA.
+
+=cut
+
+#---------------------------------PERLDOC ENDS HERE---------------------------------------------------------------

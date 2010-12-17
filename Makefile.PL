@@ -1,0 +1,20 @@
+use strict;
+use warnings;
+use ExtUtils::MakeMaker;
+
+WriteMakefile(
+    NAME                => 'WebService::UMLSKS::Similarity',
+    AUTHOR              => q{Mugdha Choudhari <choudhary.mugdha@gmail.com> , Ted Pedersen <tpederse@d.umn.edu>},
+    VERSION_FROM        => 'lib/WebService/UMLSKS/Similarity.pm',
+    ABSTRACT_FROM       => 'lib/WebService/UMLSKS/Similarity.pm',
+    ($ExtUtils::MakeMaker::VERSION >= 6.3002
+      ? ('LICENSE'=> 'perl')
+      : ()),
+    PL_FILES            => {},
+    PREREQ_PM => {'Graph' => 0.94, 'SOAP::Lite' => 0.710,
+        'Test::More' => 0,
+    },
+    EXE_FILES           => [("bin/ws-getUMLSInfo.pl", "bin/ws-getShortestPath.pl", "bin/ws-sample.pl")],	
+    dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
+    clean               => { FILES => 'WebService-UMLSKS-Similarity-*' },
+);
