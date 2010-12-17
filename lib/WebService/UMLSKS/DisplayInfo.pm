@@ -6,7 +6,6 @@ display_info - Display the required information like definitions, CUI about the 
 =head1 SYNOPSIS
 
 =head2 Basic Usage
-
     use WebService::UMLS::display_info;
     use Query;
     
@@ -23,20 +22,10 @@ display_info - Display the required information like definitions, CUI about the 
 This module has package Display which has subroutines 'new', format _object, format_scalar, format_homogenous_hash, format_homogenous_array and extract_object_class.
 This module displays required information about the concept.
 
-=head2 Methods
+=head1 Methods
 
-new: This sub creates a new object of Display
+The subroutines are as follows:
 
-Formatting Subs : format _object, format_scalar, format_homogenous_hash, format_homogenous_array and extract_object_class
-are different methods which access the information returned by the web service.
-
-=head1 SEE ALSO
-
-get_validate_term.pm  get_user_details.pm  run_query.pm  ws-getUMLSInfo.pl 
-
-=over
-
-=back
 
 =cut
 
@@ -47,10 +36,19 @@ get_validate_term.pm  get_user_details.pm  run_query.pm  ws-getUMLSInfo.pl
 use strict;
 use SOAP::Lite;
 use warnings;
+no warnings qw/redefine/;
 
-package Display;
+
+package WebService::UMLSKS::DisplayInfo;
 
 my $indentation = 0;
+
+=head2 new
+
+new: This sub creates a new object of DisplayInfo
+
+=cut
+
 sub new {
 	my $class = shift;
 	my $self  = {};
@@ -58,6 +56,13 @@ sub new {
 	bless( $self, $class );
 	return $self;
 }
+
+=head2 display_object
+
+This sub calls format_object.
+
+=cut
+
 
 
 sub display_object {
@@ -72,6 +77,13 @@ sub display_object {
 # format_homogenous_hash method. If input is array reference,
 # it calls format homogenous array and simillarly for scalar input 
 # reference it calls format_scalar.
+
+
+=head2 format_object
+
+This sub calls appropriate formatting sub.
+
+=cut
 
 sub format_object {
 	
@@ -101,6 +113,13 @@ sub format_object {
 	}
 }
 
+
+=head2 format_scalar
+
+This sub formats scalar object.
+
+=cut
+
 sub format_scalar {
 
 	my $scalar_ref = shift;
@@ -109,6 +128,14 @@ sub format_scalar {
 	return format_object($$scalar_ref);
 
 }
+
+
+
+=head2 indent
+
+This sub is used for indentation.
+
+=cut
 
 sub indent {
 
@@ -120,6 +147,13 @@ sub indent {
 	}
 
 }
+
+
+=head2 format_homogeneous_hash
+
+This sub formats hash.
+
+=cut
 
 sub format_homogeneous_hash {
 	$indentation++;
@@ -205,6 +239,14 @@ sub format_homogeneous_hash {
 	return @incl_rows;
 }
 
+
+
+=head2 format_homogeneous_array
+
+This sub formats array.
+
+=cut
+
 sub format_homogeneous_array {
 	$indentation++;
 	my $array_ref = shift;
@@ -248,6 +290,14 @@ sub format_homogeneous_array {
 	return @incl_rows;
 }
 
+
+
+=head2 extract_object_class
+
+This sub is used to remove exact reference to object.
+
+=cut
+
 sub extract_object_class {
 	my $object_ref = shift;
 
@@ -272,6 +322,12 @@ sub extract_object_class {
 #-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
 =back
 
+
+=head1 SEE ALSO
+
+ValidateTerm.pm  GetUserData.pm  Query.pm  ws-getUMLSInfo.pl 
+
+=cut
 
 =head1 AUTHORS
 

@@ -13,10 +13,10 @@ use SOAP::Lite;
 
 #use lib "/home/mugdha/workspace/thesis_modules/lib";
 
-use WebService::UMLS::get_user_details;
-use WebService::UMLS::get_validate_term;
-use WebService::UMLS::run_query;
-
+use WebService::UMLSKS::GetUserData;
+use WebService::UMLSKS::ValidateTerm;
+use WebService::UMLSKS::Query;
+no warnings qw/redefine/;
 
 
 my $verbose = 1;

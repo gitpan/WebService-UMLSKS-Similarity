@@ -118,14 +118,6 @@ input concepts and displays the path.
 =cut
 
 #---------------------------------------------------------------------------------------------------------------------------
-=pod 
-
-
-=head1 SEE ALSO 
-
-get_validate_CUI.pm  get_user_details.pm  run_query.pm  autheticate_user.pm get_parents.pm find_shortest_path.pm
-
-=cut
 
 #------------------------------PERLDOC ENDS HERE------------------------------------------------------------------------------
 
@@ -138,16 +130,17 @@ use strict;
 use warnings;
 use SOAP::Lite;
 use Term::ReadKey;
-use WebService::UMLS::get_user_details;
-use WebService::UMLS::get_validate_CUI;
-use WebService::UMLS::find_shortest_path;
-use WebService::UMLS::run_query;
-use WebService::UMLS::authenticate_user;
-use WebService::UMLS::get_parents;
-use WebService::UMLS::Similarity;
+use WebService::UMLSKS::GetUserData;
+use WebService::UMLSKS::ValidateCUI;
+use WebService::UMLSKS::FindPaths;
+use WebService::UMLSKS::Query;
+use WebService::UMLSKS::ConnectUMLS;
+use WebService::UMLSKS::GetParents;
+use WebService::UMLSKS::Similarity;
 #use get_all_associatedCUIs;
 use Getopt::Long;
 #use SOAP::Lite +trace => 'debug';
+no warnings qw/redefine/;
 
 
 #Program that returns the shortest path between two concepts using UMLS database.
@@ -175,7 +168,7 @@ GetOptions( 'verbose:i' => \$verbose , 'sources=s' => \$sources , 'rels=s' =>\$r
 
 if(defined $config_file)
 {
-	 $similarity = WebService::UMLS::Similarity->new({"config" => $config_file});
+	 $similarity = WebService::UMLSKS::Similarity->new({"config" => $config_file});
 	
 }
 
@@ -185,7 +178,7 @@ if($sources eq "" && $relations eq "")
 {
 	# use default things
 	print "\n creating default object of similarity";
-	 $similarity = WebService::UMLS::Similarity->new();
+	 $similarity = WebService::UMLSKS::Similarity->new();
 }
 else{
 
@@ -194,7 +187,7 @@ if(defined $sources && defined $relations)
 	# user specified sources through command line
 	my @source_list = split ("," , $sources);
 	my @relation_list = split ("," , $relations);
-	 $similarity = WebService::UMLS::Similarity->new({"sources" =>  \@source_list,
+	 $similarity = WebService::UMLSKS::Similarity->new({"sources" =>  \@source_list,
 												    	 "rels"   =>  \@relation_list }	);
 	
 	#$ConfigurationParameters{"SAB"} = \@sources_list;
@@ -203,14 +196,14 @@ elsif(defined $relations )
 {
 	# user specified rels through command line
 	my @relation_list = split ("," , $relations);
-	 $similarity = WebService::UMLS::Similarity->new({ "rels"   =>  \@relation_list });
+	 $similarity = WebService::UMLSKS::Similarity->new({ "rels"   =>  \@relation_list });
 	
 	#$ConfigurationParameters{"REL"} = \@relation_list;
 }
 elsif(defined $sources)
 {
 	my @source_list = split ("," , $sources);
-	 $similarity = WebService::UMLS::Similarity->new({"sources" =>  \@source_list}	);
+	 $similarity = WebService::UMLSKS::Similarity->new({"sources" =>  \@source_list}	);
 	
 }
 
@@ -455,6 +448,14 @@ while ( $continue == 1 ) {
 
 #C0229962, C1623497 
 
+=head1 Methods
+
+=head2 call_getconceptproperties
+
+This subroutines queries webservice getConceptProperties
+
+=cut
+
 sub call_getconceptproperties {
 
 	my $cui = shift;
@@ -497,6 +498,13 @@ sub call_getconceptproperties {
 
 
 #-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
+
+
+=head1 SEE ALSO 
+
+ValidateCUI.pm  GetUserData.pm  Query.pm  ConnectUMLS.pm GetParents.pm FindPaths.pm
+
+=cut
 
 
 =head1 AUTHORS

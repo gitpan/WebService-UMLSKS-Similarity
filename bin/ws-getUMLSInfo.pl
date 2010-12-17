@@ -139,11 +139,6 @@ findCUIByExact web service is called which returns a CUI for the entered term. T
 called with the returned CUI, which returns the information about the concept. If the user enters a CUI, directly 
 getConceptProperties web service is called to get the information. 
 
-
-=head1 SEE ALSO
-
-get_validate_term.pm  get_user_details.pm  run_query.pm  autheticate_user.pm
-
 =cut
 
 #------------------------------PERLDOC ENDS HERE------------------------------------------------------------------------------
@@ -160,13 +155,14 @@ use Term::ReadKey;
 
 #use lib "/home/mugdha/workspace/thesis_modules/lib";
 
-use WebService::UMLS::get_user_details;
-use WebService::UMLS::get_validate_term;
-use WebService::UMLS::run_query;
-use WebService::UMLS::authenticate_user;
-use WebService::UMLS::display_info;
-use WebService::UMLS::Similarity;
+use WebService::UMLSKS::GetUserData;
+use WebService::UMLSKS::ValidateTerm;
+use WebService::UMLSKS::Query;
+use WebService::UMLSKS::ConnectUMLS;
+use WebService::UMLSKS::DisplayInfo;
+use WebService::UMLSKS::Similarity;
 use Getopt::Long;
+no warnings qw/redefine/;
 
 #Program that connects to UMLSKS and queries the UMLS through the UMLSKS API to return information for an entered term or CUI.
 
@@ -194,7 +190,7 @@ GetOptions( 'verbose=s' => \$verbose , 'sources=s' => \$sources , 'rels=s' =>\$r
 if($config_file ne "")
 {
 	#print "\n got config file";
-	 $similarity = WebService::UMLS::Similarity->new({"config" => $config_file});
+	 $similarity = WebService::UMLSKS::Similarity->new({"config" => $config_file});
 	
 }
 
@@ -204,7 +200,7 @@ if($sources eq "" && $relations eq "")
 {
 	# use default things
 	#print "\n creating default object of similarity";
-	 $similarity = WebService::UMLS::Similarity->new();
+	 $similarity = WebService::UMLSKS::Similarity->new();
 }
 else{
 
@@ -213,7 +209,7 @@ if($sources  ne "" && $relations ne "")
 	# user specified sources through command line
 	my @source_list = split ("," , $sources);
 	my @relation_list = split ("," , $relations);
-	 $similarity = WebService::UMLS::Similarity->new({"sources" =>  \@source_list,
+	 $similarity = WebService::UMLSKS::Similarity->new({"sources" =>  \@source_list,
 												    	 "rels"   =>  \@relation_list }	);
 	
 	#$ConfigurationParameters{"SAB"} = \@sources_list;
@@ -222,7 +218,7 @@ elsif($relations ne "" )
 {
 	# user specified rels through command line
 	my @relation_list = split ("," , $relations);
-	 $similarity = WebService::UMLS::Similarity->new({ "rels"   =>  \@relation_list });
+	 $similarity = WebService::UMLSKS::Similarity->new({ "rels"   =>  \@relation_list });
 	
 	#$ConfigurationParameters{"REL"} = \@relation_list;
 }
@@ -231,7 +227,7 @@ elsif($sources ne "")
 	#print"\n got a source list";
 	my @source_list = split ("," , $sources);
 	#print "\n sources : @source_list";
-	 $similarity = WebService::UMLS::Similarity->new({"sources" =>  \@source_list}	);
+	 $similarity = WebService::UMLSKS::Similarity->new({"sources" =>  \@source_list}	);
 	
 }
 
@@ -408,7 +404,7 @@ while ( $continue == 1 ) {
 			
 			unless($object_ref =~ /empty/){
 				print "\n  Query term:$qterm";
-				my $display_obj =  new Display;
+				my $display_obj =  new DisplayInfo;
 				my $object_f = $display_obj->display_object($object_ref);
 			}
 			
@@ -427,10 +423,24 @@ while ( $continue == 1 ) {
 
 # serialization -- non-Perl types / complex types
 
+=head1 Methods
+
+=head2 SOAP::Serializer::as_boolean
+
+subroutine for serialization -- non-Perl types / complex types
+
+=cut
+
 sub SOAP::Serializer::as_boolean {
 	my ( $self, $value, $name, $type, $attr ) = @_;
 	return [ $name, { 'xsi:type' => 'xsd:boolean', %$attr }, $value ];
 }
+
+=head2 SOAP::Serializer::as_ArrayOf_xsd_string
+
+subroutine for serialization -- non-Perl types / complex types
+
+=cut
 
 sub SOAP::Serializer::as_ArrayOf_xsd_string {
 	my ( $self, $value, $name, $type, $attr ) = @_;
@@ -440,6 +450,11 @@ sub SOAP::Serializer::as_ArrayOf_xsd_string {
 #-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
 
 
+=head1 SEE ALSO
+
+ValidateTerm.pm  GetUserData.pm  Query.pm  ConnectUMLS.pm
+
+=cut
 
 =head1 AUTHORS
 

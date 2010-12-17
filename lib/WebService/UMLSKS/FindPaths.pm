@@ -24,18 +24,10 @@ no warnings qw/redefine/;
 This module has package FindPaths which has subroutines 'new' and find_paths.
 
 
-=head2 Methods
-new: This sub creates a new object of FindPaths
+=head1 Methods
 
-find_paths: This sub uses a Graph module from CPAN and creates a graph
-using the concepts and their parent concepts. It finds shortest path between two
-input concepts and displays the path. 
+The subroutins are as follows:
 
-=head1 SEE ALSO
-
-get_user_details.pm  run_query.pm  ws-getShortestPath.pl get_parents.pm
-
-=over
 
 =cut
 
@@ -46,9 +38,11 @@ get_user_details.pm  run_query.pm  ws-getShortestPath.pl get_parents.pm
 #use lib "/home/mugdha/workspace/thesis_modules/lib/WebService/UMLS";
 use SOAP::Lite;
 use strict;
-use WebService::UMLS::get_parents;
+use WebService::UMLSKS::get_parents;
 #use get_allowable_paths;
 #use get_parents;
+no warnings qw/redefine/;
+
 
 # Using Graph module from CPAN for forming graph of concepts and getting 
 # the shortest path between two concepts.
@@ -58,9 +52,15 @@ use WebService::UMLS::get_parents;
 use Graph;
 use Graph::Undirected;
 
-package FindPaths;
+package WebService::UMLSKS::FindPaths;
 
 my @nodes;
+
+=head2 new
+
+This sub creates a new object of FindPaths
+
+=cut
 
 sub new {
 	my $class = shift;
@@ -69,6 +69,15 @@ sub new {
 	return $self;
 }
 
+
+=head2 find_paths
+
+
+find_paths: This sub uses a Graph module from CPAN and creates a graph
+using the concepts and their parent concepts. It finds shortest path between two
+input concepts and displays the path. 
+
+=cut
 
 sub find_paths
 {
@@ -127,6 +136,13 @@ sub find_paths
 #-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
 
 =back
+
+
+=head1 SEE ALSO
+
+GetUserData.pm  Query.pm  ws-getShortestPath.pl GetParents.pm
+
+=cut
 
 =head1 AUTHORS
 

@@ -1,8 +1,9 @@
-package WebService::UMLS::Similarity;
+package WebService::UMLSKS::Similarity;
 
 use warnings;
 use strict;
 
+no warnings qw/redefine/;
 
 
 =head1 NAME
@@ -11,11 +12,11 @@ WebService::UMLS::Similarity - The great new WebService::UMLS::Similarity!
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
@@ -206,7 +207,7 @@ sub initialiseParameters {
 
 =head1 SEE ALSO
 
-get_validate_term.pm  get_user_details.pm   authenticate.pm  ws-getUMLSInfo.pl ws-getShortestPath.pl
+ValidateTerm.pm  GetUserData.pm   ConnectUMLS.pm  ws-getUMLSInfo.pl ws-getShortestPath.pl
 
 =cut
 

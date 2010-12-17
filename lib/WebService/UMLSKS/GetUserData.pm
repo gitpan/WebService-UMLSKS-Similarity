@@ -21,18 +21,9 @@ This module takes the username and password from user and passes them to authent
 It gets back a valid proxy ticket if the user is valid or an invalid $service object from the authenticate module.
 Then it returns the $service object to the calling program (getUMLSInfo.pl).
 
-=head2 Methods
+=head1 Methods
 
-new: This sub creates a new object of GetUserData.
-
-getUserDetail:This sub takes username and password from user through command prompt.
-and returns a service object after it authenticates the user with the help of authenticate module.
-
-
-
-=head1 SEE ALSO
-
-get_validate_term.pm  authenticate_user.pm  run_query.pm  ws-getUMLSInfo.pl 
+The subroutines are as follows:
 
 =cut
 
@@ -40,14 +31,22 @@ get_validate_term.pm  authenticate_user.pm  run_query.pm  ws-getUMLSInfo.pl
 ##########  CODE STARTS HERE  #################################################
 #use lib "/home/mugdha/workspace/thesis_modules/lib/WebService/UMLS";
 
-use WebService::UMLS::authenticate_user;
+use WebService::UMLSKS::ConnectUMLS;
 #use authenticate_user;
 use warnings;
 use strict;
+no warnings qw/redefine/;
+
 
 #use lib "/home/mugdha/workspace/getInfo";
 
-package GetUserData;
+package WebService::UMLSKS::GetUserData;
+
+=head2 new
+
+This sub creates a new object of GetUserData.
+
+=cut
 
 sub new {
 	my $class = shift;
@@ -58,6 +57,13 @@ sub new {
 
 use Term::ReadKey;
 
+=head2 getUserDetails
+
+This sub takes username and password from user through command prompt.
+and returns a service object after it authenticates the user with the help of authenticate module.
+
+=cut
+
 sub getUserDetails {
 	my $self    = shift;
 	my $verbose = shift;
@@ -66,6 +72,7 @@ sub getUserDetails {
 	print "Enter username to connect to UMLSKS:";
 	my $username = <>;
 	chomp $username;
+
 	print "Enter password:";
 	ReadMode 'noecho';
 	my $pwd = ReadLine 0;
@@ -80,6 +87,13 @@ sub getUserDetails {
 1;
 
 #-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
+
+
+=head1 SEE ALSO
+
+ValidateTerm.pm  ConnectUMLS.pm  Query.pm  ws-getUMLSInfo.pl 
+
+=cut
 
 =head1 AUTHORS
 

@@ -37,20 +37,7 @@ For valid CUI, it queries UMLS and gets back the hash reference of the informati
 
 =head2 Methods
 
-new: This sub creates a new object of Query.
-
-runQuery: This sub takes $service object, query term, method name and different parameters of query as arguments.
-It returns empty if the term does not exist in database or if the web services are not working correctly.
-It returns CUI if the query input was a term.
-If the query input is CUI, it displays preferred term, definitions with source information and CUI for it.
-
-Serialization subs: These are SOAP methods for serializing UMLS specific types.
-There is one SOAP::Serializer::as_XXX method for each complex type XXX found in the UMLSKS Web Service methods.
-
-
-=head1 SEE ALSO
-
-get_validate_term.pm  get_user_details.pm   authenticate_user.pm  ws-getUMLSInfo.pl ws-getShortestPath.pl
+The subroutines are as follows:
 
 =cut
 
@@ -61,8 +48,16 @@ get_validate_term.pm  get_user_details.pm   authenticate_user.pm  ws-getUMLSInfo
 use SOAP::Lite;
 use warnings;
 use strict;
+no warnings qw/redefine/;
 
-package Query;
+
+package WebService::UMLSKS::Query;
+
+=head2 new
+
+This sub creates a new object of Query.
+
+=cut
 
 sub new {
 	my $class = shift;
@@ -70,6 +65,17 @@ sub new {
 	bless( $self, $class );
 	return $self;
 }
+
+
+=head2 runQuery
+
+This sub takes $service object, query term, method name and different parameters of query as arguments.
+It returns empty if the term does not exist in database or if the web services are not working correctly.
+It returns CUI if the query input was a term.
+If the query input is CUI, it displays preferred term, definitions with source information and CUI for it.
+
+
+=cut
 
 sub runQuery {
 	my $self        = shift;
@@ -142,26 +148,55 @@ sub runQuery {
 #     for each complex type XXX found in the UMLSKS WS methods
 #     (see the WSDL file)
 
+=head2 SOAP::Serializer::as_CurrentUMLSRequest
+
+This is SOAP method for serializing UMLS specific types.
+
+=cut
+
 sub SOAP::Serializer::as_CurrentUMLSRequest {
 	my ( $self, $value, $name, $type, $attr ) = @_;
 	return [ $name, { 'xsi:type' => 'CurrentUMLSRequest', %$attr }, $value ];
 }
+
+=head2 SOAP::Serializer::as_ConceptIdExactRequest
+
+This is SOAP method for serializing UMLS specific types.
+
+=cut
 
 sub SOAP::Serializer::as_ConceptIdExactRequest {
 	my ( $self, $value, $name, $type, $attr ) = @_;
 	return [ $name, { 'xsi:type' => 'ConceptIdExactRequest', %$attr }, $value ];
 }
 
+=head2 SOAP::Serializer::as_ConceptIdWordRequest
+
+This is SOAP method for serializing UMLS specific types.
+
+=cut
 
 sub SOAP::Serializer::as_ConceptIdWordRequest {
 	my ( $self, $value, $name, $type, $attr ) = @_;
 	return [ $name, { 'xsi:type' => 'ConceptIdWordRequest', %$attr }, $value ];
 }
 
+=head2 SOAP::Serializer::as_SourceRequest 
+
+This is SOAP method for serializing UMLS specific types.
+
+=cut
+
 sub SOAP::Serializer::as_SourceRequest {
 	my ( $self, $value, $name, $type, $attr ) = @_;
 	return [ $name, { 'xsi:type' => 'SourceRequest', %$attr }, $value ];
 }
+
+=head2 SOAP::Serializer::as_RestrictedSearchStringRequest
+
+This is SOAP method for serializing UMLS specific types.
+
+=cut
 
 sub SOAP::Serializer::as_RestrictedSearchStringRequest {
 	my ( $self, $value, $name, $type, $attr ) = @_;
@@ -170,10 +205,22 @@ sub SOAP::Serializer::as_RestrictedSearchStringRequest {
 	];
 }
 
+=head2 SOAP::Serializer::as_ConceptRequest
+
+This is SOAP method for serializing UMLS specific types.
+
+=cut
+
 sub SOAP::Serializer::as_ConceptRequest {
 	my ( $self, $value, $name, $type, $attr ) = @_;
 	return [ $name, { 'xsi:type' => 'ConceptRequest', %$attr }, $value ];
 }
+
+=head2 SOAP::Serializer::as_TermGroup
+
+This is SOAP method for serializing UMLS specific types.
+
+=cut
 
 sub SOAP::Serializer::as_TermGroup {
 	my ( $self, $value, $name, $type, $attr ) = @_;
@@ -184,6 +231,12 @@ sub SOAP::Serializer::as_TermGroup {
 
 #-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
 
+
+=head1 SEE ALSO
+
+ValidateTerm.pm  GetUserData.pm   ConnectUMLS.pm  ws-getUMLSInfo.pl ws-getShortestPath.pl
+
+=cut
 
 
 =head1 AUTHORS

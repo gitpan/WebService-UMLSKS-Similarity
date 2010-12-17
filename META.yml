@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               WebService-UMLSKS-Similarity
-version:            0.01
+version:            0.02
 abstract:           ~
 author:
     - Mugdha Choudhari <choudhary.mugdha@gmail.com> , Ted Pedersen <tpederse@d.umn.edu>

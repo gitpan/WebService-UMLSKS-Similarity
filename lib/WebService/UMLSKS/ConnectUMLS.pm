@@ -24,20 +24,10 @@ This module has package Connect which has three subroutines 'new', 'get_pt' and 
 This module takes the username and password from getUserDetails module and connects to the authentication server.
 It returns a valid proxy ticket if the user is valid or returns an invalid service object if UMLS sends an invalid proxy ticket.
 
-=head2 Methods
+=head1 Methods
 
-new: This sub creates a new object of Connect 
+The subroutines are as follows:
 
-connect_umls:This sub takes username and password as arguments 
-and returns a proxy ticket object after it authenticates the user.
-
-get_pt: This sub returns a proxy ticket.
-
-=head1 SEE ALSO
-
-get_validate_term.pm  get_user_details.pm  run_query.pm  ws-getUMLSInfo.pl 
-
-=over
 
 =cut
 
@@ -52,9 +42,16 @@ use warnings;
 use SOAP::Lite;
 use strict;
 no warnings qw/redefine/; #http://www.perlmonks.org/?node_id=582220
-package ConnectUMLS;
+package WebService::UMLSKS::ConnectUMLS;
 
 # This sub creates a new object of Connect
+
+
+=head2 new
+
+This sub creates a new object of ConnectUMLS 
+
+=cut
 
 sub new {
 	my $class = shift;
@@ -76,6 +73,14 @@ my $UMLSKS_WSDL_URI =
 my $UMLSKS_URI = 'http://umlsks.nlm.nih.gov';
 my $pt_service;
 my $pgt;
+
+
+=head2 connect_umls
+
+This sub takes username and password as arguments 
+and returns a proxy ticket object after it authenticates the user.
+
+=cut
 
 sub connect_umls {
 	my $self     = shift;
@@ -120,6 +125,12 @@ sub connect_umls {
 
 # This sub returns the proxy ticket.
 
+=head2 get_pt
+
+This sub returns a proxy ticket.
+
+=cut
+
 sub get_pt {
 	return $pt_service->getProxyTicket( $pgt, $UMLSKS_URI );
 }
@@ -129,6 +140,13 @@ sub get_pt {
 #-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
 
 =back
+
+
+=head1 SEE ALSO
+
+ValidateTerm.pm  GetUserData.pm  Query.pm  ws-getUMLSInfo.pl 
+
+=cut
 
 =head1 AUTHORS
 

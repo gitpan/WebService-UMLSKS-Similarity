@@ -22,26 +22,10 @@ This module has package GetParents which has subroutines 'new', 'read_object','e
 'format_object', 'format_homogeneous_hash', 'format_scalar', format_homogeneous_array.
 
 
-=head2 Methods
+=head1 Methods
 
-new: This sub creates a new object of GetParents.
+The subroutines are as follows:
 
-indent : This sub is used to add indentation while displaying the information.
-
-read_object: This sub reads hash reference object passed to this
-sub and fetches the required parents' information.
-
-format_object: This sub calls appropriate functions like format_homogenous_hash,
-format_scalar, format_homogenous_array depending on the object reference it is called with.
-
-Formatting Subs : format _object, format_scalar, format_homogenous_hash, format_homogenous_array and extract_object_class
-are different methods which access the information returned by the web service.
-
-=head1 SEE ALSO
-
-get_validate_CUI.pm  get_user_details.pm  run_query.pm  ws-getShortestPath.pl find_shortest_path.pm
-
-=over
 
 =cut
 
@@ -55,12 +39,18 @@ use strict;
 use warnings;
 no warnings qw/redefine/;
 
-package GetParents;
+package WebService::UMLSKS::GetParents;
 our $ConceptInfo_ref;
 
 my %ConceptInfo;
 my @parents;
 my $indentation;
+
+=head2 new
+
+new: This sub creates a new object of GetParents.
+
+=cut
 
 sub new {
 	my $class = shift;
@@ -70,6 +60,13 @@ sub new {
 	bless( $self, $class );
 	return $self;
 }
+
+=head2 read_object
+
+read_object: This sub reads hash reference object passed to this
+sub and fetches the required parents' information.
+
+=cut
 
 sub read_object {
 
@@ -126,7 +123,12 @@ sub read_object {
 # it calls format homogenous array and simillarly for scalar input 
 # reference it calls format_scalar.
 
+=head2 format_object
 
+format_object: This sub calls appropriate functions like format_homogenous_hash,
+format_scalar, format_homogenous_array depending on the object reference it is called with.
+
+=cut
 
 sub format_object {
 
@@ -156,6 +158,13 @@ sub format_object {
 	}
 }
 
+
+=head2 indent
+
+This sub is used for indentation.
+
+=cut
+
 sub indent {
 
 	#print "\n";
@@ -167,6 +176,13 @@ sub indent {
 
 }
 
+
+=head2 format_scalar
+
+This sub formats scalar object.
+
+=cut
+
 sub format_scalar {
 
 	my $scalar_ref = shift;
@@ -176,6 +192,12 @@ sub format_scalar {
 	return format_object($$scalar_ref);
 
 }
+
+=head2 format_homogeneous_hash
+
+This sub formats hash.
+
+=cut
 
 sub format_homogeneous_hash {
 	#$indentation++;
@@ -297,6 +319,12 @@ sub format_homogeneous_hash {
 
 }
 
+=head2 format_homogeneous_array
+
+This sub formats array.
+
+=cut
+
 sub format_homogeneous_array {
 	#$indentation++;
 	my $array_ref = shift;
@@ -316,6 +344,12 @@ sub format_homogeneous_array {
 
 	return @incl_rows;
 }
+
+=head2 extract_object_class
+
+This sub removes exact reference of object.
+
+=cut
 
 sub extract_object_class {
 	my $object_ref = shift;
@@ -339,6 +373,14 @@ sub extract_object_class {
 #-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
 
 =back
+
+
+=head1 SEE ALSO
+
+ValidateCUI.pm  GetUserData.pm  Query.pm  ws-getShortestPath.pl FindPaths.pm
+
+=cut
+
 
 =head1 AUTHORS
 

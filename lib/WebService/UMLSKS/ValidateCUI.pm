@@ -24,20 +24,9 @@ This module takes the query CUI from calling program and validates it.
 It returns values depending on whether the query is valid or invalid CUI.
 
 
-=head2 Methods
+=head1 Methods
 
-new: This sub creates a new object of ValidateCUI. 
-
-validateCUI: This sub takes the query CUI from calling program and validates it.
-It returns '2' if CUI is valid CUI.
-In the case of invalid CUI, it returns '10'.
-
-
-=head1 SEE ALSO
-
-authenticate_user.pm  get_user_details.pm  run_query.pm  ws-getUMLSInfo.pl 
-
-=over
+The subroutines are as follows:
 
 =cut
 
@@ -48,10 +37,20 @@ authenticate_user.pm  get_user_details.pm  run_query.pm  ws-getUMLSInfo.pl
 use warnings;
 use strict;
 
+no warnings qw/redefine/;
+
+
 # This is ValidateTerm package which has two subroutines 'new' and 'validateTerm'.
-package ValidateCUI;
+package WebService::UMLSKS::ValidateCUI;
 
 # This sub creates a new object of ValidateTerm
+
+=head2 new
+
+This sub creates a new object of ValidateCUI. 
+
+=cut
+
 sub new {
 	my $class = shift;
 	my $self  = {};
@@ -67,6 +66,13 @@ sub new {
 # followed by seven digits and all digits are not zero at one time
 # i.e., C0000000 is a invalid CUI.
 
+=head2 validateCUI
+
+This sub takes the query CUI from calling program and validates it.
+It returns '2' if CUI is valid CUI.
+In the case of invalid CUI, it returns '10'.
+
+=cut
 
 sub validateCUI {
 
@@ -101,7 +107,12 @@ sub validateCUI {
 
 #-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
 
-=back
+
+=head1 SEE ALSO
+
+ConnectUMLS.pm  GetUserData.pm  Query.pm  ws-getUMLSInfo.pl 
+
+=cut
 
 =head1 AUTHORS
 
