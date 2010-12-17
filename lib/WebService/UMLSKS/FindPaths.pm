@@ -1,15 +1,13 @@
-
-
 =head1 NAME
 
-GetParents- Finds all possible paths between two concepts along with shortest 
+WebService::UMLSKS::FindPaths - Finds all possible paths between two concepts along with shortest 
 of all the paths.
 
 =head1 SYNOPSIS
-no warnings qw/redefine/;
+
 =head2 Basic Usage
 
-    use WebService::UMLS::find_shortest_path;
+    use WebService::UMLSKS::FindPaths;
     
 	my $get_paths = new FindPaths;  
 	my $parentInfo_ref = \%ParentInfo;
@@ -24,10 +22,9 @@ no warnings qw/redefine/;
 This module has package FindPaths which has subroutines 'new' and find_paths.
 
 
-=head1 Methods
+=head1 SUBROUTINES
 
 The subroutins are as follows:
-
 
 =cut
 
@@ -58,7 +55,7 @@ my @nodes;
 
 =head2 new
 
-This sub creates a new object of FindPaths
+This sub creates a new object of FindPaths.
 
 =cut
 
@@ -72,8 +69,7 @@ sub new {
 
 =head2 find_paths
 
-
-find_paths: This sub uses a Graph module from CPAN and creates a graph
+This sub uses a Graph module from CPAN and creates a graph
 using the concepts and their parent concepts. It finds shortest path between two
 input concepts and displays the path. 
 
@@ -146,7 +142,7 @@ GetUserData.pm  Query.pm  ws-getShortestPath.pl GetParents.pm
 
 =head1 AUTHORS
 
-Mugdha Choudhari             University of Minnesota Duluth
+Mugdha Choudhari,             University of Minnesota Duluth
                              E<lt>chou0130 at d.umn.eduE<gt>
 
 Ted Pedersen,                University of Minnesota Duluth

@@ -1,17 +1,17 @@
 
 =head1 NAME
 
-run_query - Query UMLS web services with the query arguments like query term and method name.
+WebService::UMLSKS::Query - Query UMLS web services with the query arguments like query term and method name.
 
 =head1 SYNOPSIS
 
 =head2 Basic Usage
 
-  use WebService::UMLS::run_query;
-  use WebService::UMLS::authenticate_user;
+  use WebService::UMLSKS::Query;
+  use WebService::UMLSKS::ConnectUMLS;
 
   my $query = new Query;
-  my $c = new Connect;
+  my $c = new ConnectUMLS;
   my $method_name = 'findCUIByExact';
   
   $cui = $query->runQuery(
@@ -35,7 +35,7 @@ This module has package Query which has many subroutines like 'new', 'runQuery' 
 This module takes $service object, query term, method name and different parameters of query as arguments.
 For valid CUI, it queries UMLS and gets back the hash reference of the information.
 
-=head2 Methods
+=head2 SUBROUTINES
 
 The subroutines are as follows:
 
@@ -241,7 +241,7 @@ ValidateTerm.pm  GetUserData.pm   ConnectUMLS.pm  ws-getUMLSInfo.pl ws-getShorte
 
 =head1 AUTHORS
 
-Mugdha Choudhari             University of Minnesota Duluth
+Mugdha Choudhari,             University of Minnesota Duluth
                              E<lt>chou0130 at d.umn.eduE<gt>
 
 Ted Pedersen,                University of Minnesota Duluth

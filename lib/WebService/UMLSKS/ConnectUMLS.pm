@@ -1,12 +1,12 @@
 =head1 NAME
 
-authenticate - Authenticate the user before accessing UMLSKS with valid username and password.
+WebService::UMLSKS::ConnectUMLS - Authenticate the user before accessing UMLSKS with valid username and password.
 
 =head1 SYNOPSIS
 
 =head2 Basic Usage
 
-    use WebService::UMLS::authenticate_user;
+    use WebService::UMLSKS::ConnectUMLS;
 
     print "Enter username to connect to UMLSKS:";
 	my $username = <>;
@@ -20,14 +20,13 @@ authenticate - Authenticate the user before accessing UMLSKS with valid username
 
 =head1 DESCRIPTION
 
-This module has package Connect which has three subroutines 'new', 'get_pt' and 'connect_umls'.
+This module has package ConnectUMLS which has three subroutines 'new', 'get_pt' and 'connect_umls'.
 This module takes the username and password from getUserDetails module and connects to the authentication server.
 It returns a valid proxy ticket if the user is valid or returns an invalid service object if UMLS sends an invalid proxy ticket.
 
-=head1 Methods
+=head1 SUBROUTINES
 
 The subroutines are as follows:
-
 
 =cut
 
@@ -49,7 +48,7 @@ package WebService::UMLSKS::ConnectUMLS;
 
 =head2 new
 
-This sub creates a new object of ConnectUMLS 
+This sub creates a new object of ConnectUMLS.
 
 =cut
 
@@ -150,7 +149,7 @@ ValidateTerm.pm  GetUserData.pm  Query.pm  ws-getUMLSInfo.pl
 
 =head1 AUTHORS
 
-Mugdha Choudhari             University of Minnesota Duluth
+Mugdha Choudhari,             University of Minnesota Duluth
                              E<lt>chou0130 at d.umn.eduE<gt>
 
 Ted Pedersen,                University of Minnesota Duluth

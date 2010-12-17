@@ -1,15 +1,14 @@
 
-=pod
 
 =head1 NAME
 
-get_validate_CUI - Get the query CUI from calling program and validate the CUI.
+WebService::UMLSKS::ValidateCUI - Get the query CUI from calling program and validate the CUI.
 
 =head1 SYNOPSIS
 
 =head2 Basic Usage
 
-  use WebService::UMLS::get_validate_CUI;  
+  use WebService::UMLSKS::ValidateCUI;  
   
   print "\nEnter query CUI:";
   my $cui        = <>;  
@@ -24,7 +23,7 @@ This module takes the query CUI from calling program and validates it.
 It returns values depending on whether the query is valid or invalid CUI.
 
 
-=head1 Methods
+=head1 SUBROUTINES
 
 The subroutines are as follows:
 
@@ -116,7 +115,7 @@ ConnectUMLS.pm  GetUserData.pm  Query.pm  ws-getUMLSInfo.pl
 
 =head1 AUTHORS
 
-Mugdha Choudhari             University of Minnesota Duluth
+Mugdha Choudhari,             University of Minnesota Duluth
                              E<lt>chou0130 at d.umn.eduE<gt>
 
 Ted Pedersen,                University of Minnesota Duluth

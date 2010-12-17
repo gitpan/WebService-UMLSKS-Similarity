@@ -5,7 +5,7 @@
 
 =head1 NAME
 
-Get UMLS Info
+ws-getUMLSInfo
 
 =cut
 
@@ -17,7 +17,7 @@ Get UMLS Info
 
 =pod
 
-perl getUMLSInfo.pl -verbose -sources SNOMEDCT,MSH --rels PAR,CHD --config configfilename 
+perl ws-getUMLSInfo.pl -verbose -sources SNOMEDCT,MSH --rels PAR,CHD --config configfilename 
 
 --verbose: Sets verbose flag to true and thus displays all the authentication information for the user.
 
@@ -58,9 +58,6 @@ Follwing is a sample output
 =item Enter query term/CUI:stop
 
 =back
-
-
-
 
 =head1 DESCRIPTION
 
@@ -423,7 +420,7 @@ while ( $continue == 1 ) {
 
 # serialization -- non-Perl types / complex types
 
-=head1 Methods
+=head1 SUBROUTINES
 
 =head2 SOAP::Serializer::as_boolean
 

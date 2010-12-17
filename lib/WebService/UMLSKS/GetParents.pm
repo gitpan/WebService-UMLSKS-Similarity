@@ -1,13 +1,13 @@
 
 =head1 NAME
 
-GetParents- Fetches all the parent concepts for the input concept.
+WebService::UMLSKS::GetParents - Fetches all the parent concepts for the input concept.
 
 =head1 SYNOPSIS
 
 =head2 Basic Usage
 
-    use WebService::UMLS::get_parents;
+    use WebService::UMLSKS::GetParents;
     
     my $parents_ref = call_getconceptproperties($cui);# parents_ref is a hash reference
     my $read_parents = new GetParents;
@@ -22,7 +22,7 @@ This module has package GetParents which has subroutines 'new', 'read_object','e
 'format_object', 'format_homogeneous_hash', 'format_scalar', format_homogeneous_array.
 
 
-=head1 Methods
+=head1 SUBROUTINES
 
 The subroutines are as follows:
 
@@ -48,7 +48,7 @@ my $indentation;
 
 =head2 new
 
-new: This sub creates a new object of GetParents.
+This sub creates a new object of GetParents.
 
 =cut
 
@@ -63,7 +63,7 @@ sub new {
 
 =head2 read_object
 
-read_object: This sub reads hash reference object passed to this
+This sub reads hash reference object passed to this
 sub and fetches the required parents' information.
 
 =cut
@@ -125,7 +125,7 @@ sub read_object {
 
 =head2 format_object
 
-format_object: This sub calls appropriate functions like format_homogenous_hash,
+This sub calls appropriate functions like format_homogenous_hash,
 format_scalar, format_homogenous_array depending on the object reference it is called with.
 
 =cut
@@ -384,7 +384,7 @@ ValidateCUI.pm  GetUserData.pm  Query.pm  ws-getShortestPath.pl FindPaths.pm
 
 =head1 AUTHORS
 
-Mugdha Choudhari             University of Minnesota Duluth
+Mugdha Choudhari,             University of Minnesota Duluth
                              E<lt>chou0130 at d.umn.eduE<gt>
 
 Ted Pedersen,                University of Minnesota Duluth

@@ -1,13 +1,13 @@
 
 =head1 NAME
 
-getUserDetails - Get username and password from the user.
+WebService::UMLSKS::GetUserData - Get username and password from the user.
 
 =head1 SYNOPSIS
 
 =head2 Basic Usage
 
-  use WebService::UMLS::getUserDetails;
+  use WebService::UMLSKS::GetUserData;
 
   my $getinfo = new GetUserData;
   my $verbose = 1;
@@ -21,7 +21,7 @@ This module takes the username and password from user and passes them to authent
 It gets back a valid proxy ticket if the user is valid or an invalid $service object from the authenticate module.
 Then it returns the $service object to the calling program (getUMLSInfo.pl).
 
-=head1 Methods
+=head1 SUBROUTINES
 
 The subroutines are as follows:
 
@@ -97,7 +97,7 @@ ValidateTerm.pm  ConnectUMLS.pm  Query.pm  ws-getUMLSInfo.pl
 
 =head1 AUTHORS
 
-Mugdha Choudhari             University of Minnesota Duluth
+Mugdha Choudhari,             University of Minnesota Duluth
                              E<lt>chou0130 at d.umn.eduE<gt>
 
 Ted Pedersen,                University of Minnesota Duluth

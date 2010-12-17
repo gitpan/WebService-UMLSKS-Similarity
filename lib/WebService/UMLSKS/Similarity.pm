@@ -8,15 +8,15 @@ no warnings qw/redefine/;
 
 =head1 NAME
 
-WebService::UMLS::Similarity - The great new WebService::UMLS::Similarity!
+WebService::UMLSKS::Similarity - The great new WebService::UMLS::Similarity!
 
 =head1 VERSION
 
-Version 0.02
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 SYNOPSIS
 
@@ -56,7 +56,7 @@ or user can provide directly the configuration file path in the constructor usin
 defualt parameters are used.  'SNOMEDCT' is the deafult source used and 'PAR|CHD'
 are the default relations used.
 
-=head1 Methods
+=head1 SUBROUTINES
 
 =head2 new
 
@@ -215,7 +215,7 @@ ValidateTerm.pm  GetUserData.pm   ConnectUMLS.pm  ws-getUMLSInfo.pl ws-getShorte
 
 =head1 AUTHORS
 
-Mugdha Choudhari             University of Minnesota Duluth
+Mugdha Choudhari,             University of Minnesota Duluth
                              E<lt>chou0130 at d.umn.eduE<gt>
 
 Ted Pedersen,                University of Minnesota Duluth

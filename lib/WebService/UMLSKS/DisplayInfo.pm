@@ -1,15 +1,16 @@
 
 =head1 NAME
 
-display_info - Display the required information like definitions, CUI about the input term.
+WebService::UMLSKS::DisplayInfo - Display the required information like definitions, CUI about the input term.
 
 =head1 SYNOPSIS
 
 =head2 Basic Usage
-    use WebService::UMLS::display_info;
-    use Query;
+
+    use WebService::UMLSKS::DisplayInfo;
+    use WebService::UMLSKS::Query;
     
-    my $display_obj =  new Display;
+    my $display_obj =  new DisplayInfo;
     my $query = new Query;
     
     my $object_ref = $query->runQuery($service, $qterm,	'getConceptProperties', {params});
@@ -19,13 +20,12 @@ display_info - Display the required information like definitions, CUI about the 
 
 =head1 DESCRIPTION
 
-This module has package Display which has subroutines 'new', format _object, format_scalar, format_homogenous_hash, format_homogenous_array and extract_object_class.
+This module has package DisplayInfo which has subroutines 'new', format _object, format_scalar, format_homogenous_hash, format_homogenous_array and extract_object_class.
 This module displays required information about the concept.
 
-=head1 Methods
+=head1 SUBROUTINES
 
 The subroutines are as follows:
-
 
 =cut
 
@@ -45,7 +45,7 @@ my $indentation = 0;
 
 =head2 new
 
-new: This sub creates a new object of DisplayInfo
+This sub creates a new object of DisplayInfo.
 
 =cut
 
@@ -71,6 +71,7 @@ sub display_object {
 	my $return_ref = format_object ($object_refr);
 	return $return_ref;
 }
+
 # This sub formats the structures returned by the web service. It calls
 # the appropriate subroutines depending on the type of structure
 # it is called with. If the input reference is a hash reference it calls 
@@ -331,7 +332,7 @@ ValidateTerm.pm  GetUserData.pm  Query.pm  ws-getUMLSInfo.pl
 
 =head1 AUTHORS
 
-Mugdha Choudhari             University of Minnesota Duluth
+Mugdha Choudhari,             University of Minnesota Duluth
                              E<lt>chou0130 at d.umn.eduE<gt>
 
 Ted Pedersen,                University of Minnesota Duluth

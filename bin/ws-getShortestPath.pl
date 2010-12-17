@@ -5,7 +5,7 @@
 
 =head1 NAME
 
-Get Shortest Path
+ws-getShortestPath
 
 =cut
 
@@ -17,7 +17,7 @@ Get Shortest Path
 
 =pod
 
-perl getShortestPath.pl -verbose -sources SNOMEDCT,MSH --rels PAR,CHD --config configfilename 
+perl ws-getShortestPath.pl -verbose -sources SNOMEDCT,MSH --rels PAR,CHD --config configfilename 
 
 --verbose: Sets verbose flag to true and thus displays all the authentication information for the user.
 
@@ -77,39 +77,38 @@ This program uses following packages:
  
 =item package GetParents
 
-->sub GetParents::read_object which reads hash reference object passed to this
+sub GetParents::read_object which reads hash reference object passed to this
 sub and fetches the required parents' information.
 
-->sub GetParents::format_object calls appropriate functions like format_homogenous_hash,
+sub GetParents::format_object calls appropriate functions like format_homogenous_hash,
 format_scalar, format_homogenous_array depending on the object reference it is called with.
 format_homogenous_hash,format_scalar and format_homogenous_array are subroutines which 
 read the objects they are called with and fetch the desired information.
 
-=item package Connect
+=item package ConnectUMLS
 
-->sub Connect::get_pt to get the proxy ticket using a web service.
+sub ConnectUMLS::get_pt to get the proxy ticket using a web service.
 
-
-->sub Connect::connect_umls to connect to UMLS by sending username 
+sub ConnectUMLS::connect_umls to connect to UMLS by sending username 
 and password and getting back a proxy ticket.
 
 =item package ValidateCUI
 
-->sub ValidateCUI::validateCUI to accepts an input and validates it 
+sub ValidateCUI::validateCUI to accepts an input and validates it 
 for as valid or invalid CUI.
 
 =item package GetUserData
 
-->sub GetUserData::getUserDetails to get username and password from the user.
+sub GetUserData::getUserDetails to get username and password from the user.
 
 =item package Query
 
-->sub Query::runQuery which takes method name, service and other parameters as argument and calls the web service. 
+sub Query::runQuery which takes method name, service and other parameters as argument and calls the web service. 
 It also displays the information received from the web service and other error messages. 
 
 =item package FindPaths
 
-->sub FindPaths::find_paths which uses a Graph module from CPAN and creates a graph
+sub FindPaths::find_paths which uses a Graph module from CPAN and creates a graph
 using the concepts and their parent concepts. It finds shortest path between two
 input concepts and displays the path. 
 
@@ -448,7 +447,7 @@ while ( $continue == 1 ) {
 
 #C0229962, C1623497 
 
-=head1 Methods
+=head1 SUBROUTINES
 
 =head2 call_getconceptproperties
 
