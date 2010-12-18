@@ -372,7 +372,7 @@ sub extract_object_class {
 
 #-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
 
-=back
+## =back spurious back removed by tdp
 
 
 =head1 SEE ALSO

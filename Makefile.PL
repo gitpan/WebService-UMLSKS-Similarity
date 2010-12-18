@@ -8,7 +8,7 @@ WriteMakefile(
     VERSION_FROM        => 'lib/WebService/UMLSKS/Similarity.pm',
     ABSTRACT_FROM       => 'lib/WebService/UMLSKS/Similarity.pm',
     ($ExtUtils::MakeMaker::VERSION >= 6.3002
-      ? ('LICENSE'=> 'perl')
+      ? ('LICENSE'=> 'GPL')
       : ()),
     PL_FILES            => {},
     PREREQ_PM => {'Graph' => 0.94, 'SOAP::Lite' => 0.710,

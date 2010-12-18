@@ -1,7 +1,6 @@
 =head1 NAME
 
-WebService::UMLSKS::FindPaths - Finds all possible paths between two concepts along with shortest 
-of all the paths.
+WebService::UMLSKS::FindPaths - Finds all possible paths between two concepts along with shortest of all the paths.
 
 =head1 SYNOPSIS
 
@@ -131,7 +130,7 @@ sub find_paths
 
 #-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
 
-=back
+## =back spurious back removed by tdp
 
 
 =head1 SEE ALSO
