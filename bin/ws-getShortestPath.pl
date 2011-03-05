@@ -49,7 +49,9 @@ Follwing is a sample output
 =item Source is : C0229962, Destination is: C1623497
 
 =item path is->Body part (C0229962)->Body Regions (C0005898)->Anatomic structures (C0700276)->Physical anatomical entity (C0506706)->Body structure (C1268086)->SNOMED CT (C1623497)
+C1879289 C1616556
 
+C0015392 C0015392
 =item Enter first query CUI:stop
 
 =back
@@ -123,19 +125,21 @@ input concepts and displays the path.
 
 ###############################################################################
 ##########  CODE STARTS HERE  #################################################
+use lib "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/lib";
 
-#use lib "/home/mugdha/workspace/thesis_modules/lib";
 use strict;
 use warnings;
 use SOAP::Lite;
 use Term::ReadKey;
 use WebService::UMLSKS::GetUserData;
 use WebService::UMLSKS::ValidateCUI;
-use WebService::UMLSKS::FindPaths;
+#use WebService::UMLSKS::FindPaths;
 use WebService::UMLSKS::Query;
 use WebService::UMLSKS::ConnectUMLS;
 use WebService::UMLSKS::GetParents;
 use WebService::UMLSKS::Similarity;
+use WebService::UMLSKS::MakeGraph;
+
 #use get_all_associatedCUIs;
 use Getopt::Long;
 #use SOAP::Lite +trace => 'debug';
@@ -234,7 +238,7 @@ my @ListCUI = ();
 # Creating object of class GetUserData and call the sub getUserDetails.
 # Receive a $service object if the user is a valid user.
 
-my $g       = GetUserData::new GetUserData;
+my $g       = WebService::UMLSKS::GetUserData->new;
 my $service = $g->getUserDetails($verbose);
 
 # User enetered wrong username or password.
@@ -245,19 +249,23 @@ if ( $service == 0 ) {
 
 # Creating object of query and passing the method name along with parameters.
 
-my $query = Query::new Query;
+my $query = WebService::UMLSKS::Query->new;
 
 # Creating Connect object to call sub get_pt while forming a query.
 
-my $c = ConnectUMLS::new ConnectUMLS;
+my $c = WebService::UMLSKS::ConnectUMLS->new;
 
 # Creating GetParents object to get back the parents of input terms.
 
-my $read_parents = GetParents::new GetParents;
+my $read_parents = WebService::UMLSKS::GetParents->new;
 
 # Creating  FindPaths object to get back shortest path between two input terms.
 
-my $get_paths = FindPaths::new FindPaths;
+#my $get_paths = WebService::UMLSKS::FindPaths->new;
+
+# Creating object of MakeGraph
+
+my $form_graph = WebService::UMLSKS::MakeGraph->new;
 
 # Creating  GetAllCUIs object to get back all the associated CUIs related to 
 # two input terms.
@@ -305,7 +313,7 @@ while ( $continue == 1 ) {
 # Validate the term by passing it to the sub validateTerm which belongs to class getTerm.
 # Create object of class getTerm to access the sub validateTerm.
 
-		my $valid       = ValidateCUI::new ValidateCUI;
+		my $valid       = WebService::UMLSKS::ValidateCUI->new;
 		my $isvalid_CUI1 = $valid->validateCUI($term1);
 		my $isvalid_CUI2 = $valid->validateCUI($term2);
 
@@ -339,6 +347,13 @@ while ( $continue == 1 ) {
 		#print "\nnow cui2 is $cui2";
 		$isvalid_CUI2 = 2;
 
+# Check if both the inputs are same.
+
+if($qterm1 eq $qterm2)
+{
+	print "\n Both the input terms share extra strong relation as they are same";
+	next;
+}
 
 # ValidateTerm returns $isTerm_CUI1 = 2 for first input, if the input entered 
 # by the user is a valid CUI.
@@ -372,129 +387,14 @@ while ( $continue == 1 ) {
 
 		}
 		
+# Calling formGraph to make a graph and find the allowable shortest path
 
-# Algorithm to store parents information:
-# 1.Add input CUIs to ListCUI if CUI does not exist in ListCUI.
-# 2. while ListCUI is not empty {
-#    a.Take first entry from queue and call getParents() on it.
-#    b.Add an entry in ParentInfo with the query CUI and parents returned by webservice.
-#    c.Add parents to ListCUI if not already present.
-#    }
-       my @seen = ();
-		until ( @ListCUI == 0 ) {
-			my $item = pop(@ListCUI);		
-			push (@seen , $item);
-			my $ref  =
-			  $read_parents->read_object( call_getconceptproperties($item) );
-			  if (defined($ref))
-			  {
-			my @parent_array = @$ref;
-
-# deleting the input cui from the list refer : http://sial.org/blog/2007/08/delete_element_from_array.html
-			for my $i ( 0 .. $#parent_array ) {
-				if ( $parent_array[$i] eq $item ) {
-					delete $parent_array[$i];
-				}
-				else {
-
-					# push it in ListCUI if not already present.
-					#if($parent_array[$i])
-					#print "\nparent[$i] = $parent_array[$i]";
-					if($parent_array[$i] ~~ @seen)
-					{
-						#print "\n $parent_array[$i] already seen";
-					}
-					else
-					{
-						 # print "\n $parent_array[$i] not in ListCUI so push it";
-						push(@ListCUI, $parent_array[$i]);
-					}
-
-				}
-			}
-			#print "\n";
-
-			#print "@parent_array";
-			# add entry in parentinfo hash
-			$ParentInfo{$item} = [@parent_array];
-			}
-			#elsif ($item eq 'C1623497')
-			#{
-			#	my @root = ('root');
-			#	$ParentInfo{$item} = [@root];
-			#}
-			#else
-		#{
-		#	my @undefined = ('undefined');
-		#	$ParentInfo{$item} = [@undefined];
-		#}
-
-		}
-	print "\n UMLS Source(s) used: @sources\n";
-	print "\n UMLS Relation(s) used: @relations\n";
-
-	my $ParentInfo_ref = \%ParentInfo;	
-	# Call findShortestPath with the parameter as parentInfo.
-	$get_paths->find_paths($ParentInfo_ref,$qterm1,$qterm2);
-
+		my $t1 = shift(@ListCUI);
+		my $t2 = shift(@ListCUI);
+		$form_graph->form_graph($t1,$t2,$service);
 	}
 	
-#	foreach my $k ( keys( %ParentInfo) ) { 
-#              delete ($ParentInfo{$k});
-#	}
-
 }
-
-#C0229962, C1623497 
-
-=head1 SUBROUTINES
-
-=head2 call_getconceptproperties
-
-This subroutines queries webservice getConceptProperties
-
-=cut
-
-sub call_getconceptproperties {
-
-	my $cui = shift;
-	my $parents_ref;
-
-	$service->readable(1);
-	$parents_ref = $query->runQuery(
-		$service,$cui,
-		'getConceptProperties',
-		{
-			casTicket => $c->get_pt(),
-
-		   # use SOAP::Data->type in order to prevent
-		   # UTF-8 strings from being encoded into base64
-		   # http://cookbook.soaplite.com/#internationalization%20and%20encoding
-			CUI => SOAP::Data->type( string => $cui ),
-
-			# CUI => "asfa",
-			language => 'ENG',
-			release  => '2009AA',
-			
-			SABs => [(@sources)],
-			#SABs => [qw( SNOMEDCT )],
-			includeConceptAttrs  => 'false',
-			includeSemanticTypes => 'false',
-			includeTerminology   => 'false',
-
-			#includeDefinitions   => 'true',
-			includeSuppressibles => 'false',
-
-			includeRelations => 'true',
-			relationTypes    => ['PAR'],
-		},
-	);
-
-	return $parents_ref;
-}
-
-#good reference : perlmeme.org, perl101.org, perlmonks.org
-
 
 #-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
 

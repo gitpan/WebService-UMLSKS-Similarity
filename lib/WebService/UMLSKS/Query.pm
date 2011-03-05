@@ -102,7 +102,12 @@ sub runQuery {
 		# If the returned contents array is empty then display error message.
 
 		my $contents_ref = $object_ref->{"contents"};
-		if ( !@$contents_ref ) {
+		my @temp = @$contents_ref;
+	#	print "\n contents : @temp";
+		#if (!defined $contents_ref){
+		#	return 'empty';
+		#}
+		if (!@$contents_ref ) {
 
 			# if content_ref is empty
 			#	print
@@ -110,6 +115,7 @@ sub runQuery {
 			return 'empty';
 
 		}
+		
 
 # If UMLSKS returns a defined hash reference then, store and print the information received.
 

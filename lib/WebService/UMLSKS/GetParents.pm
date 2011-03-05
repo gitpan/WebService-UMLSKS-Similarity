@@ -46,6 +46,7 @@ my %ConceptInfo;
 my @parents;
 my $indentation;
 
+
 =head2 new
 
 This sub creates a new object of GetParents.
@@ -95,7 +96,11 @@ sub read_object {
 		}
 		else {
 			unless($elem eq '1'){
-				push( @unique, $elem );
+				unless ($elem eq '0')
+				{
+					push( @unique, $elem );
+				}
+				
 			}
 			
 		}
@@ -114,6 +119,7 @@ sub read_object {
 	}
 	
 }
+
 
 
 # This sub formats the structures returned by the web service. It calls
@@ -239,9 +245,17 @@ sub format_homogeneous_hash {
 		else {
 
 # Check for rel key in hash to select the needed part in relation hash.
-			if ( $att =~ /rel/ ) {
+			if ( $att =~ /rel/) {
+				#if(defined $hash_ref->{$att})
+				#{
+				#	if($hash_ref->{$att} =~/\bPAR\b/){
+				#		print "\n got relation $att : $hash_ref->{$att}";
+						$flag = 1;
+				#	}
+					
+			#	}
 
-				$flag = 1;
+				
 
 				
 
@@ -257,6 +271,8 @@ sub format_homogeneous_hash {
 
 				else {
 					if ( $att =~ /CN/ ) {
+						
+				#print " \n got term , $att : $hash_ref->{$att}";
 						$current_term = $hash_ref->{$att};
 						$t_flag       = 1;
 
@@ -270,6 +286,8 @@ sub format_homogeneous_hash {
 							$current_cui = $hash_ref->{$att};
 							if(defined $current_cui){ #c 1
 							unless ($current_cui ~~ %ConceptInfo){
+								
+							#print " \n inserting in hash $current_cui : $current_term";
 							$ConceptInfo{$current_cui} = $current_term;
 							}
 							}
@@ -277,7 +295,7 @@ sub format_homogeneous_hash {
 
 							
 						}
-
+						
 						push( @parents, $hash_ref->{$att} );
 					}
 

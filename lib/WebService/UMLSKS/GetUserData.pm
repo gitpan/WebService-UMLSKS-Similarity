@@ -29,7 +29,9 @@ The subroutines are as follows:
 
 ###############################################################################
 ##########  CODE STARTS HERE  #################################################
-#use lib "/home/mugdha/workspace/thesis_modules/lib/WebService/UMLS";
+
+
+use lib "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/lib";
 
 use WebService::UMLSKS::ConnectUMLS;
 #use authenticate_user;
@@ -78,8 +80,8 @@ sub getUserDetails {
 	my $pwd = ReadLine 0;
 	ReadMode 'normal';
 	chomp $pwd;
-	my $c = ConnectUMLS->new;
-	my $service = $c->ConnectUMLS::connect_umls( $username, $pwd, $verbose );
+	my $c = WebService::UMLSKS::ConnectUMLS->new;
+	my $service = $c->connect_umls( $username, $pwd, $verbose );
 	return $service;
 
 }

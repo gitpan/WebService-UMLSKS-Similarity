@@ -10,6 +10,28 @@ WebService::UMLSKS::ValidateCUI - Get the query CUI from calling program and val
 
   use WebService::UMLSKS::ValidateCUI;  
   
+
+sub formGraph
+
+{
+	
+my $self = shift;	
+my $term1 = shift;	
+my $term2 = shift;
+my $service = shift;
+
+
+# Creating GetParents object to get back the parents of input terms.
+
+my $read_parents = WebService::UMLSKS::GetParents->new;
+
+	
+my @queue = ();
+
+my $current_available_cost = 100000;
+my $pcost                  = 10;
+my $scost                  = 30;
+my @parents                = ();
   print "\nEnter query CUI:";
   my $cui        = <>;  
   my $valid      = new ValidateCUI;

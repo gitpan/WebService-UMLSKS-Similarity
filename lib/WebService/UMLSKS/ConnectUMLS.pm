@@ -36,7 +36,6 @@ The subroutines are as follows:
 
 # This module has package Connect which has three subroutines 'new', 'get_pt' and 'connect_umls'.
 
-#use lib "/home/mugdha/workspace/getInfo";
 use warnings;
 use SOAP::Lite;
 use strict;
@@ -66,10 +65,17 @@ sub new {
 # These URIs will be used for authentication of the user.
 # Please see 'http://umlsks.nlm.nih.gov/DocPortlet/html/dGuide/appls/appls1.html' for details.
 
-my $KSAUTH_WSDL_URI = 'http://mor.nlm.nih.gov/auth-ob.wsdl';
+my $KSAUTH_WSDL_URI = 
+#'http://mor.nlm.nih.gov/auth-ob.wsdl';
+'https://uts-ws.nlm.nih.gov/authorization/services/AuthorizationPort?WSDL';
+#'http://mor.nlm.nih.gov/auth-ob.wsdl';
 my $UMLSKS_WSDL_URI =
-  'http://umlsks.nlm.nih.gov/UMLSKS/services/UMLSKSService?WSDL';
-my $UMLSKS_URI = 'http://umlsks.nlm.nih.gov';
+'https://uts-ws.nlm.nih.gov/UMLSKS/services/UMLSKSService?wsdl';
+#'http://umlsks.nlm.nih.gov/UMLSKS/services/UMLSKSService?WSDL'; 
+my $UMLSKS_URI = 
+#'https://uts-ws.nlm.nih.gov';
+#'https://uts.nlm.nih.gov';
+'http://umlsks.nlm.nih.gov';
 my $pt_service;
 my $pgt;
 

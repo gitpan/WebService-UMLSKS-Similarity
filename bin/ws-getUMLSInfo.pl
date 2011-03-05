@@ -150,7 +150,7 @@ use warnings;
 use SOAP::Lite;
 use Term::ReadKey;
 
-#use lib "/home/mugdha/workspace/thesis_modules/lib";
+use lib "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/lib";
 
 use WebService::UMLSKS::GetUserData;
 use WebService::UMLSKS::ValidateTerm;
@@ -244,7 +244,7 @@ my $object_ref;
 # Creating object of class GetUserData and call the sub getUserDetails.
 # Receive a $service object if the user is a valid user.
 
-my $g       = GetUserData->new;
+my $g       = WebService::UMLSKS::GetUserData->new;
 my $service = $g->getUserDetails($verbose);
 
 # User enetered wrong username or password.
@@ -255,7 +255,7 @@ if ( $service == 0 ) {
 
 # Creating Connect object to call sub get_pt while forming a query.
 
-my $c = ConnectUMLS::new ConnectUMLS;
+my $c = WebService::UMLSKS::ConnectUMLS->new;
 
 
 #print $service;
@@ -287,7 +287,7 @@ while ( $continue == 1 ) {
 # Validate the term by passing it to the sub validateTerm which belongs to class getTerm.
 # Create object of class getTerm to access the sub validateTerm.
 
-		my $valid      = ValidateTerm->new;
+		my $valid      = WebService::UMLSKS::ValidateTerm->new;
 		my $isTerm_CUI = $valid->validateTerm($term);
 
 		#print $isTerm_CUI;
@@ -302,7 +302,7 @@ while ( $continue == 1 ) {
    # Depending on the value returned by validateTerm form a query for UMLSKS.
    # Creating object of query and passing the method name along with parameters.
 
-		my $query = Query->new;
+		my $query = WebService::UMLSKS::Query->new;
 		my $cui   = ' ';
 		
 		
@@ -314,7 +314,7 @@ while ( $continue == 1 ) {
 
 # following sub describes the details like the method name to be called, term to be searched etc.
 			$service->readable(1);
-			$cui = $query->Query::runQuery(
+			$cui = $query->runQuery(
 				$service, $qterm,
 				'findCUIByExact',
 				{
@@ -401,7 +401,7 @@ while ( $continue == 1 ) {
 			
 			unless($object_ref =~ /empty/){
 				print "\n  Query term:$qterm";
-				my $display_obj =  new DisplayInfo;
+				my $display_obj =  WebService::UMLSKS::DisplayInfo->new;
 				my $object_f = $display_obj->display_object($object_ref);
 			}
 			

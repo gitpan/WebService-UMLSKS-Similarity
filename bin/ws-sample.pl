@@ -10,8 +10,7 @@ use strict;
 use warnings;
 use SOAP::Lite;
 
-
-#use lib "/home/mugdha/workspace/thesis_modules/lib";
+#use lib "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/lib";
 
 use WebService::UMLSKS::GetUserData;
 use WebService::UMLSKS::ValidateTerm;
@@ -24,13 +23,13 @@ my $verbose = 1;
 # Creating object of class GetUserData and call the sub getUserDetails.
 # Receive a $service object if the user is a valid user.
 
-my $g       = GetUserData->new;
+my $g       = WebService::UMLSKS::GetUserData->new;
 my $service = $g->getUserDetails($verbose);
 
 
 # Creating Connect object to call sub get_pt while forming a query.
 
-my $c = ConnectUMLS::new ConnectUMLS;
+my $c = WebService::UMLSKS::ConnectUMLS->new;
 
 print "\nEnter query term:";
 
@@ -44,13 +43,13 @@ print "\nEnter query term:";
 # Validate the term by passing it to the sub validateTerm which belongs to class getTerm.
 # Create object of class getTerm to access the sub validateTerm.
 
-		my $valid      = ValidateTerm->new;
+		my $valid      = WebService::UMLSKS::ValidateTerm->new;
 		my $isTerm_CUI = $valid->validateTerm($term);
 
 
  # Creating object of query and passing the method name along with parameters.
 
-		my $query = Query->new;
+		my $query = WebService::UMLSKS::Query->new;
 		
 		my $cui;
 
@@ -58,7 +57,7 @@ print "\nEnter query term:";
 # Using default source SNOMECT to get the CUI back.
 
 			$service->readable(1);
-			$cui = $query->Query::runQuery(
+			$cui = $query->runQuery(
 				$service, $term,
 				'findCUIByExact',
 				{

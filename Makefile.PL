@@ -11,7 +11,7 @@ WriteMakefile(
       ? ('LICENSE'=> 'GPL')
       : ()),
     PL_FILES            => {},
-    PREREQ_PM => {'Graph' => 0.94, 'SOAP::Lite' => 0.710,
+    PREREQ_PM => {'SOAP::Lite' => 0.710,
         'Test::More' => 0,
     },
     EXE_FILES           => [("bin/ws-getUMLSInfo.pl", "bin/ws-getShortestPath.pl", "bin/ws-sample.pl")],	

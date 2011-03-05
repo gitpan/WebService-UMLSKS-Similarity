@@ -16,7 +16,7 @@ Version 0.04
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 =head1 SYNOPSIS
 
@@ -82,7 +82,7 @@ sub new {
 	bless(  $self ,$class);
 	
 	# call initialiseParameters only if parameters are passed else use default values
-	if ($params ne "")
+	if (defined $params && $params ne "")
 	{
 	$self->initialiseParameters($params);
 	#printhashvaluearray(\%ConfigurationParameters);
