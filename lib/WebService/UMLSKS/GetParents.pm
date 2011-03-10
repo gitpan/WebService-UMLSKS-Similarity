@@ -73,6 +73,7 @@ sub read_object {
 
 	my $self        = shift;
 	my $object_refr = shift;
+	my $qterm = shift;
 	@parents = ();
 	#my $return_ref =
 	format_object($object_refr);
@@ -95,11 +96,9 @@ sub read_object {
 
 		}
 		else {
-			unless($elem eq '1'){
-				unless ($elem eq '0')
-				{
+			unless($elem eq '1' | $elem eq '0' | $elem eq $qterm){
+				
 					push( @unique, $elem );
-				}
 				
 			}
 			
@@ -109,12 +108,12 @@ sub read_object {
 	# Code snippet from perlfaq4 ends here.
 	
 	my $parents_ref = \@unique;
-	if(defined $parents_ref){
+	if(defined $parents_ref && $#unique != -1){
 		#print "\n parents are @unique";
 		return $parents_ref;		
 	}
 	else{
-		print "\n No parents found";
+		print "\n No parents found for $qterm in current Source/s";
 		return 'empty';
 	}
 	

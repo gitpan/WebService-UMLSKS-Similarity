@@ -150,7 +150,7 @@ use warnings;
 use SOAP::Lite;
 use Term::ReadKey;
 
-use lib "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/lib";
+#use lib "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/lib";
 
 use WebService::UMLSKS::GetUserData;
 use WebService::UMLSKS::ValidateTerm;
@@ -328,8 +328,8 @@ while ( $continue == 1 ) {
 					release      => '2009AA',
 					#SABs => [( $source )],
 					#SABs => [($sources[0])],
-					SABs => [(@sources)],
-					#SABs => [qw(SNOMEDCT)],
+					#SABs => [(@sources)],
+					SABs => [qw(SNOMEDCT)],
 					includeSuppressibles => 'false',
 				},
 			);
@@ -347,7 +347,7 @@ while ( $continue == 1 ) {
 # with the CUI to get the information about the CUI.
 
 			else {
-				if ( $cui =~ /empty/ ) {
+				if ( $cui =~ /empty|undefined/ ) { # change made , added undefined to return values of run query
 					print "\nThere is no information for your input in UMLS.";
 					next;
 				}
@@ -385,8 +385,8 @@ while ( $continue == 1 ) {
 					# CUI => "asfa",
 					language => 'ENG',
 					release  => '2009AA',
-					SABs => [(@sources)],
-					#SABs => [qw( SNOMEDCT )],
+					#SABs => [(@sources)],
+					SABs => [qw( SNOMEDCT )],
 					includeConceptAttrs  => 'false',
 					includeSemanticTypes => 'false',
 					includeTerminology   => 'false',

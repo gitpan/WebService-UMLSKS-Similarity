@@ -31,7 +31,7 @@ The subroutines are as follows:
 ##########  CODE STARTS HERE  #################################################
 
 
-use lib "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/lib";
+#use lib "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/lib";
 
 use WebService::UMLSKS::ConnectUMLS;
 #use authenticate_user;

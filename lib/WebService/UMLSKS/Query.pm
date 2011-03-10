@@ -93,25 +93,24 @@ sub runQuery {
 	
 	# If the returned reference is not defined then display error message.
 	
-	unless ( defined $object_ref ) {
-		#print "No information for this CUI.";
-		return 'empty';
+	if ( !defined $object_ref ) {
+		print "No information for this CUI.";
+		return 'undefined';
 	}
 	else {
 
 		# If the returned contents array is empty then display error message.
 
 		my $contents_ref = $object_ref->{"contents"};
-		my @temp = @$contents_ref;
+	#	my @temp = @$contents_ref;
 	#	print "\n contents : @temp";
 		#if (!defined $contents_ref){
 		#	return 'empty';
 		#}
-		if (!@$contents_ref ) {
+		if (!defined $contents_ref | !@$contents_ref) {
 
 			# if content_ref is empty
-			#	print
-			#	"There is no information for your query term/CUI in database.";
+			#print "There is no information for your query term/CUI in database.";
 			return 'empty';
 
 		}
@@ -123,7 +122,7 @@ sub runQuery {
 
 			if ( $method_name =~ /findCUIByExact/ ) {
 
-				my $contents_ref = $object_ref->{"contents"};
+			#c 1#	$contents_ref = $object_ref->{"contents"};
 				foreach my $val (@$contents_ref) {
 					while ( my ( $key, $value ) = each(%$val) ) {
 						if ( $key =~ /CUI/ ) {					

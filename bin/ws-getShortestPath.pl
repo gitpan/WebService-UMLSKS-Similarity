@@ -125,7 +125,7 @@ input concepts and displays the path.
 
 ###############################################################################
 ##########  CODE STARTS HERE  #################################################
-use lib "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/lib";
+#use lib "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/lib";
 
 use strict;
 use warnings;
@@ -139,6 +139,7 @@ use WebService::UMLSKS::ConnectUMLS;
 use WebService::UMLSKS::GetParents;
 use WebService::UMLSKS::Similarity;
 use WebService::UMLSKS::MakeGraph;
+use Log::Message::Simple qw[msg error debug];
 
 #use get_all_associatedCUIs;
 use Getopt::Long;
@@ -159,7 +160,7 @@ no warnings qw/redefine/;
 my $verbose = '';
 #GetOptions( 'verbose!' => \$verbose );
 
-
+my $filepath = '';
 my $sources = '';
 my $relations = '';
 my $similarity;
@@ -167,7 +168,41 @@ my $config_file = '';
 
 #GetOptions( 'verbose!' => \$verbose );
 
-GetOptions( 'verbose:i' => \$verbose , 'sources=s' => \$sources , 'rels=s' =>\$relations, 'config=s' =>\$config_file );
+GetOptions( 'verbose:i' => \$verbose , 'sources=s' => \$sources , 'rels=s' =>\$relations,
+ 'config=s' =>\$config_file, 'log=s' => \$filepath );
+
+# Reference for use of Log package
+# http://perldoc.perl.org/Log/Message/Simple.html#msg(%22message-string%22-%5b%2cVERBOSE%5d)
+
+
+if($filepath ne '' && $verbose == 1){
+
+open (LOG , '>>', $filepath);
+
+
+$Log::Message::Simple::MSG_FH     = \*LOG;
+$Log::Message::Simple::ERROR_FH   = \*LOG;
+$Log::Message::Simple::DEBUG_FH   = \*LOG;
+
+# Following code to print time and date in readable form is taken from following source 
+#http://perl.about.com/od/perltutorials/a/perllocaltime_2.htm
+
+my @months = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
+my @weekDays = qw(Sun Mon Tue Wed Thu Fri Sat Sun);
+my ($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime();
+my $year = 1900 + $yearOffset;
+my $theTime = "$hour:$minute:$second, $weekDays[$dayOfWeek] $months[$month] $dayOfMonth, $year";
+
+# Code from source ends here
+
+debug("\n*********************************\n Log written on :
+$theTime\n************************************", $verbose); 
+
+
+
+
+	
+}
 
 if(defined $config_file)
 {
@@ -234,6 +269,10 @@ my %ParentInfo ;
 # Declaring ListCUI : queue/ list of CUIs elligible for parent search
 
 my @ListCUI = ();
+
+
+#open (LOG ,">", "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/LOG1") or die "could not open log file";
+
 
 # Creating object of class GetUserData and call the sub getUserDetails.
 # Receive a $service object if the user is a valid user.
@@ -335,7 +374,7 @@ while ( $continue == 1 ) {
 		}
 
 		$qterm1 = $term1;
-		#print "\nnow cui1 is $cui1";
+		#print LOG "\ncui1 is $cui1";
 		$isvalid_CUI1 = 2;
 
 
@@ -344,16 +383,9 @@ while ( $continue == 1 ) {
 
 
 		$qterm2 = $term2;
-		#print "\nnow cui2 is $cui2";
+		#print LOG "\n cui2 is $cui2";
 		$isvalid_CUI2 = 2;
 
-# Check if both the inputs are same.
-
-if($qterm1 eq $qterm2)
-{
-	print "\n Both the input terms share extra strong relation as they are same";
-	next;
-}
 
 # ValidateTerm returns $isTerm_CUI1 = 2 for first input, if the input entered 
 # by the user is a valid CUI.
@@ -366,7 +398,9 @@ if($qterm1 eq $qterm2)
 			push( @ListCUI, $qterm1 );
 
 			#my $pref1 = call_getconceptproperties( $term1, $cui1 );
-			#print "\n  Query term:$term2";
+			msg( "\n Query term:$term2 " , $verbose);
+			
+			
 			#my $object_f = $read_parents->read_object($pref1);
 
 		}
@@ -383,6 +417,7 @@ if($qterm1 eq $qterm2)
 
 			#my $pref2 = call_getconceptproperties( $term2, $cui2 );
 			#print "\n  Query term:$term2";
+			msg( "\n Query term:$term2 " , $verbose);
 			#my $object_f = $read_parents->read_object($pref2);
 
 		}
@@ -391,7 +426,13 @@ if($qterm1 eq $qterm2)
 
 		my $t1 = shift(@ListCUI);
 		my $t2 = shift(@ListCUI);
-		$form_graph->form_graph($t1,$t2,$service);
+		
+	# Check if both the inputs are same.
+	
+	my $return_val = $form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations);
+	if($return_val eq 'same'){
+		next;
+	}
 	}
 	
 }

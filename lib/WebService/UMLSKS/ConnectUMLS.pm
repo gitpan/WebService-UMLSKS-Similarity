@@ -42,6 +42,8 @@ use strict;
 no warnings qw/redefine/; #http://www.perlmonks.org/?node_id=582220
 package WebService::UMLSKS::ConnectUMLS;
 
+use Log::Message::Simple qw[msg error debug];
+
 # This sub creates a new object of Connect
 
 
@@ -111,17 +113,17 @@ sub connect_umls {
 	# If pgt is obtained, user is a valid user.
 
 	else {
-		printf "\nProxy granting ticket : %s\n", $pgt if $verbose;
+		msg("\nProxy granting ticket : $pgt", $verbose);
 
 		# Get proxy ticket.
 
 		my $pt = get_pt();
-		printf "\n Proxy Ticket: %s\n", $pt if $verbose;
+		msg("\n Proxy Ticket:$pt",$verbose);
 
 		# Initialize UMLSKS service.
 
 		my $service = SOAP::Lite->service($UMLSKS_WSDL_URI);
-		print "\n service=$service\n" if $verbose;
+		msg("\n service=$service\n",$verbose);
 		return $service;
 
 	}

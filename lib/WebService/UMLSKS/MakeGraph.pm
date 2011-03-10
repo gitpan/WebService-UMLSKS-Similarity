@@ -29,7 +29,7 @@ The subroutines are as follows:
 # Description : this module makes a graph stored in form of hash of hash
 
 
-use lib "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/lib";
+#use lib "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/lib";
 use warnings;
 use SOAP::Lite;
 use strict;
@@ -39,11 +39,23 @@ use WebService::UMLSKS::GetAllowablePaths;
 use WebService::UMLSKS::GetParents;
 use WebService::UMLSKS::Query;
 use WebService::UMLSKS::ConnectUMLS;
+use WebService::UMLSKS::Similarity;
 
 package WebService::UMLSKS::MakeGraph;
 
-my %node_cost;
-my %Graph;
+use Log::Message::Simple qw[msg error debug];
+
+my %node_cost = ();
+my %Graph = ();
+
+my @sources = ();
+my @relations = ();
+
+my $verbose = 0;
+#open (LOG ,">", "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/log") or die "could not open log file";
+
+
+
 
 # This sub creates a new object of GetAllowablePaths
 
@@ -78,7 +90,22 @@ my $self = shift;
 my $term1 = shift;	
 my $term2 = shift;
 my $service = shift;
+$verbose = shift;
+my $s_ref = shift;
+my $r_ref = shift;
 
+
+@sources = @$s_ref;
+@relations = @$r_ref;
+
+msg ("\n Sources used are : SNOMEDCT",$verbose);
+
+msg ("\n Relations used are : PAR",$verbose);
+
+%node_cost = ();
+%Graph = ();
+
+msg("\nin makegraph Term1 : $term1 , Term2: $term2", $verbose);
 
 # Creating GetParents object to get back the parents of input terms.
 
@@ -106,30 +133,45 @@ my $current_node           = "";
 my @visited                = ();
 my @current_shortest_path = ();
 my $final_cost;
+my $counter = 0;
 #until queue is empty
 while ( $#queue != -1 ) {
 
 	@parents = ();
 	@sib     = ();
-#	printQueue(\@queue);
-
+	printQueue(\@queue);
+	#printHoH(\%Graph);	
+	
 	my $current_node = shift(@queue);
+	$counter++;
 	push( @visited, $current_node );
-#	print "\n visited : @visited";
+	msg( "\n visited : @visited" , $verbose);
 	my $cost_upto_current_node = $node_cost{$current_node};
-#	print
-#"\n current node : $current_node and cost till here : $cost_upto_current_node";
+	msg("\n current node : $current_node and cost till here : $cost_upto_current_node", $verbose);
 	if ( $cost_upto_current_node >= $current_available_cost ) {
-		print "\n ###########################################################
-		\nIgnore node as it would lead to longer path";
+		msg("\n ########\nIgnore node as it would lead to longer path", $verbose);
 		next;
 	}
 
 	my $neighbors_hash_ref = call_getconceptproperties($current_node, $service);
-	my $neighbors_info_ref = $read_parents-> read_object($neighbors_hash_ref);
+	my $neighbors_info_ref = $read_parents-> read_object($neighbors_hash_ref,$current_node);
 	
-	if(defined $neighbors_info_ref)
+	if($neighbors_hash_ref eq 'undefined' | $neighbors_hash_ref eq 'empty'| $neighbors_info_ref eq 'empty')
 	{
+		
+		next;
+	}
+	
+	if(defined $neighbors_info_ref && @$neighbors_info_ref)
+	{
+		if($counter == 2)
+		{
+			if($term1 eq $term2){
+				print "\n Both the input terms share extra strong relation as they are same";
+				msg("\n Both the input terms share extra strong relation as they are same", $verbose);
+				return 'same';
+			}
+		}
 		@parents = @$neighbors_info_ref;
 		foreach my $p (@parents){
 			$Graph{$current_node}{$p} = 1;
@@ -137,33 +179,32 @@ while ( $#queue != -1 ) {
 		}
 	}
 	
+	
 	#@parents = @{ $get_info->getP($current_node) };
 	#@sib     = @{ $get_info->getS($current_node) };
 
-#	print "\n parents of $current_node : @parents";
-#	print "\n siblings of $current_node : @sib";
+	msg( "\n parents of $current_node : @parents" , $verbose);
+	msg( "\n siblings of $current_node : @sib" , $verbose);
 	if ( $#parents == -1 && $#sib == -1 ) {
 		next;
 	}
 	else {
 		if ( $#parents != -1 ) {
 			foreach my $parent (@parents) {
-#				print "\n parent is : $parent";
+				msg( "\n parent is : $parent" , $verbose);
 				unless ( $parent ~~ @visited ) {
-#					print "\n parent $parent not visited";
+					msg( "\n parent $parent not visited");
 					my $total_cost_till_parent =
 					  $cost_upto_current_node + $pcost;
 					if ( $parent ~~ %node_cost ) {
-#						print "\n $parent is already in node cost hash";
+						msg( "\n $parent is already in node cost hash");
 						if ( $node_cost{$parent} > $total_cost_till_parent ) {
-#							print
-#							  "\n changing value of $parent in node cost hash";
+							msg ("\n changing value of $parent in node cost hash", $verbose);
 							$node_cost{$parent} = $total_cost_till_parent;
 						}
 					}
 					else {
-#						print
-#"\n parent $parent not in node hash, so add to hash and push in queue";
+						msg("\n parent $parent not in node hash, so add to hash and push in queue", $verbose);
 						$node_cost{$parent} = $total_cost_till_parent;
 						push( @queue, $parent );
 
@@ -209,35 +250,54 @@ while ( $#queue != -1 ) {
 #		}
 #	}
 
-	if($#queue > 50)
-	{
-		print "\n Taking too long to find path.. so exiting!";
-		exit;
-	}	
-
-	my $subgraph = \%Graph;
+#	if($#queue > 50)
+#	{
+#		print "\n Taking too long to find path.. so exiting!";
+#		exit;
+#	}	
+	
+	
+	
+	my %subgraph = %Graph;
+	#getinfo -> getGraph();
 
 	@current_shortest_path = ();
 
 	# Check if a shortest allowable path exists between source and destination
-	if ( $get_paths->get_shortest_path_info( $subgraph, $term1, $term2 ) != -1 )
+	if ( $get_paths->get_shortest_path_info( \%subgraph, $term1, $term2, $verbose ) != -1 )
 	{
 		my @path_info =
-		  @{ $get_paths->get_shortest_path_info( $subgraph, $term1, $term2 ) };
+		  @{ $get_paths->get_shortest_path_info( \%subgraph, $term1, $term2 ) };
 		@current_shortest_path  = @{ shift(@path_info) };
 		$current_available_cost = shift(@path_info);
 	}
 
 	$final_cost = $current_available_cost;
-	#print "\n current shortest path : @current_shortest_path";
+	msg( "\n current shortest path : @current_shortest_path" , $verbose);
 
-	#print "\n current available path cost : $current_available_cost";
+	msg( "\n current available path cost : $current_available_cost" , $verbose);
 
 }
 
-print "\n Final shortest path : @current_shortest_path";
+if (@current_shortest_path ){
+	my %Concept = %$WebService::UMLSKS::GetParents::ConceptInfo_ref;
+	
+	print "\n Final shortest path :";
+	foreach my $n (@current_shortest_path){
+	 	print "->$Concept{$n} ($n)";
+	 } 
+	 
+	msg("\n Final shortest path : ", $verbose);
+	foreach my $n (@current_shortest_path){
+	 	msg ("->$Concept{$n} ($n)", $verbose);
+	 } 
 
-print "\n final path cost : $final_cost";
+	print "\n Final path cost : $final_cost";
+	msg("\n Final path cost : $final_cost", $verbose);
+	
+}
+
+
 
 #print "\n the parents are @parents";
 #print "\n siblings are @sib";
@@ -246,15 +306,20 @@ print "\n final path cost : $final_cost";
 	
 }
 
+=head2 printQueue
 
-#sub printQueue {
-#	my $q_ref = shift;
-#	my @queue = @$q_ref;
-#	print "\nCurrent Queue is: \n ";
-#	foreach my $ele (@queue) {
-#		print "\t$ele , $node_cost{$ele}";
-#	}
-#}
+This subroutines prints the current contents of queue
+
+=cut
+
+sub printQueue {
+	my $q_ref = shift;
+	my @queue = @$q_ref;
+	msg(( "\nCurrent Queue is: \n ") , $verbose);
+	foreach my $ele (@queue) {
+		msg( "\t$ele , $node_cost{$ele}" , $verbose);
+	}
+}
 
 
 =head2 call_getconceptproperties
@@ -309,18 +374,49 @@ sub call_getconceptproperties {
 			relationTypes    => ['PAR'],
 		},
 	);
-	if (!defined $parents_ref)
+	
+
+	if ($parents_ref eq 'undefined')
 	{
-		print "\n ref not defined";
+		print "\n The CUI/term does not exist";
+		return 'undefined';
 	}
-	if($parents_ref eq 'empty')
+	elsif($parents_ref eq 'empty')
 	{
-		print "\n no parents for $cui";
+		print "\n No information found for $cui in current Source/s";
+		return 'empty';
+	}
+	else{
+		return $parents_ref;
 	}
 #	print "\nhash returned by ws : $parents_ref";
-	return $parents_ref;
+	
 }
 
+=head2 printHoH
+
+This subroutines prints the current contents of hash of hash
+
+=cut
+
+sub printHoH {
+
+	my $hoh = shift;
+	my %hoh = %$hoh;
+
+	msg( "\nin printHoH : Graph is :" , $verbose);
+	foreach my $ngram ( keys %hoh ) {
+		msg("\n******************************************", $verbose);
+		msg( "\n" . $ngram . "{" , $verbose);
+		foreach my $word ( keys %{ $hoh{$ngram} } ) {
+			msg( "\n" , $verbose);
+			msg( $word. "=>" . $hoh{$ngram}{$word} , $verbose);
+		}
+		msg( "\n}" , $verbose);
+
+	}
+
+}
 
 
 1;
