@@ -46,13 +46,14 @@ my $scost = 30;
 
 use Log::Message::Simple qw[msg error debug];
 my $verbose = 0;
+my $regex = "";
+
 
 =head2 new
 
 This sub creates a new object of GetAllowablePaths
 
 =cut
-
 
 sub new {
 	my $class = shift;
@@ -70,19 +71,25 @@ This sub returns the shortest path along with its cost
 
 sub get_shortest_path_info
 {
+	
 	my $self     = shift;
 	my $hash_ref = shift;
 	my $source      = shift;
 	my $destination = shift;
-	$verbose = shift;
+	my $ver = shift;
+	$regex = shift;
+	$verbose = $ver;
 	
 	#printHoH($hash_ref);
 	my @possible_paths = @{get_allpaths($hash_ref,$source,$destination)};
 	#msg( "\npossible paths between $source and $destination : @possible_paths", $verbose);
 	if($#possible_paths != -1)
 	{
-		my @allowable_paths = @{get_allowable_paths( \@possible_paths, $hash_ref)};
-		#msg( "\n allowable  paths between $source and $destination : @allowable_paths", $verbose);
+		my @allowable_paths =();
+		
+			 @allowable_paths = @{get_allowable_paths( \@possible_paths, $hash_ref, $regex)};
+			#msg( "\n allowable  paths between $source and $destination : @allowable_paths", $verbose);
+		
 		if($#allowable_paths != -1)
 		{
 			my @shortest_path_info = @{get_shortest_path( \@allowable_paths , $hash_ref)};
@@ -216,9 +223,10 @@ This sub filters set of allowable paths from all possible path.
 sub get_allowable_paths {
 	my $all_paths_ref = shift;
 	my $graph_ref     = shift;
+	my $allowed_patterns_regex = shift;
 	my @all_paths     = @$all_paths_ref;
 	my %graph         = %$graph_ref;
-
+	
 	my @allowable_paths = ();
 
    # This regex is formed using the allowed paths' patterns given in HSO paper
@@ -226,10 +234,12 @@ sub get_allowable_paths {
    # horizontal arrows.
 
 	# Currently any length of vector is allowed.
-
-	my $allowed_patterns_regex =
-	  '\b1+\b|\b1+2+\b|\b1+3+\b|\b1+3+2+\b|\b2+\b|\b2+3+\b|\b3+2+\b|\b3+\b';
-
+	#my $allowed_patterns_regex = "";
+	#$allowed_patterns_regex = "$regex";
+	# default : '\b1+\b|\b1+2+\b|\b1+3+\b|\b1+3+2+\b|\b2+\b|\b2+3+\b|\b3+2+\b|\b3+\b';
+	 
+	msg ("\nin allowable paths : regex is : $allowed_patterns_regex",$verbose);
+	
 	# For all possible paths, for every path, form the path string using the
 	# directions of the paths that join source and destination
 	
@@ -253,8 +263,8 @@ sub get_allowable_paths {
 		# Now compare the path string formed for current path with the allowed
 		# patterns, to find out if this path is allowed or not.
 		# If allowed store it in the array of allowed paths.
-
-		if ( $path_string =~ /$allowed_patterns_regex/ ) {
+		
+		if ( $path_string =~ m/$allowed_patterns_regex/ ) {
 			msg("\n path $path_string is allowed", $verbose);
 			my $allowed_path_ref = \@candidate_path;
 			push( @allowable_paths, $allowed_path_ref );
@@ -263,6 +273,7 @@ sub get_allowable_paths {
 		else {
 			msg("\n path $path_string not allowed", $verbose);
 		}
+		
 
 	}
 
@@ -362,7 +373,6 @@ my @shortest_path_info = ();
 This subroutines prints the current contents of hash of hash
 
 =cut
-
 
 sub printHoH {
 

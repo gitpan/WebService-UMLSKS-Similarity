@@ -90,15 +90,17 @@ my $self = shift;
 my $term1 = shift;	
 my $term2 = shift;
 my $service = shift;
-$verbose = shift;
+my $ver = shift;
 my $s_ref = shift;
 my $r_ref = shift;
+my $regex = shift;
+$verbose = $ver;
 
-
+msg("\n in form graph : regex: $regex", $verbose);
 @sources = @$s_ref;
 @relations = @$r_ref;
 
-msg ("\n Sources used are : SNOMEDCT",$verbose);
+msg ("\n Sources used are : @sources",$verbose);
 
 msg ("\n Relations used are : PAR",$verbose);
 
@@ -134,6 +136,7 @@ my @visited                = ();
 my @current_shortest_path = ();
 my $final_cost;
 my $counter = 0;
+
 #until queue is empty
 while ( $#queue != -1 ) {
 
@@ -242,13 +245,13 @@ while ( $#queue != -1 ) {
 		}
 	}
 	
-#	@queue = ();
-#	foreach my $key ( sort { $node_cost{$a} <=> $node_cost{$b} } keys %node_cost ) {
-#		unless($key ~~ @visited)
-#		{
-#			push(@queue, $key);
-#		}
-#	}
+ 	@queue = ();
+	foreach my $key ( sort { $node_cost{$a} <=> $node_cost{$b} } keys %node_cost ) {
+		unless($key ~~ @visited)
+		{
+			push(@queue, $key);
+		}
+	}
 
 #	if($#queue > 50)
 #	{
@@ -262,12 +265,11 @@ while ( $#queue != -1 ) {
 	#getinfo -> getGraph();
 
 	@current_shortest_path = ();
-
 	# Check if a shortest allowable path exists between source and destination
-	if ( $get_paths->get_shortest_path_info( \%subgraph, $term1, $term2, $verbose ) != -1 )
+	my $get_path_info_result =  $get_paths->get_shortest_path_info( \%subgraph, $term1, $term2, $verbose, $regex );
+	if ($get_path_info_result != -1 )
 	{
-		my @path_info =
-		  @{ $get_paths->get_shortest_path_info( \%subgraph, $term1, $term2 ) };
+		my @path_info = @$get_path_info_result;
 		@current_shortest_path  = @{ shift(@path_info) };
 		$current_available_cost = shift(@path_info);
 	}
@@ -346,7 +348,8 @@ sub call_getconceptproperties {
 	
 	#print "\n calling ws for cui $cui";
 	$service->readable(1);
-	$parents_ref = $query->runQuery(
+	my $return_ref;
+	$return_ref = $query->runQuery(
 		$service,$cui,
 		'getConceptProperties',
 		{
@@ -361,8 +364,8 @@ sub call_getconceptproperties {
 			language => 'ENG',
 			release  => '2009AA',
 			
-			#SABs => [(@sources)],
-			SABs => [qw( SNOMEDCT )],
+			SABs => [(@sources)],
+			#SABs => [qw( SNOMEDCT )],
 			includeConceptAttrs  => 'false',
 			includeSemanticTypes => 'false',
 			includeTerminology   => 'false',
@@ -376,18 +379,19 @@ sub call_getconceptproperties {
 	);
 	
 
-	if ($parents_ref eq 'undefined')
+	if ($return_ref eq 'undefined')
 	{
 		print "\n The CUI/term does not exist";
 		return 'undefined';
 	}
-	elsif($parents_ref eq 'empty')
+	elsif($return_ref eq 'empty')
 	{
 		print "\n No information found for $cui in current Source/s";
 		return 'empty';
 	}
 	else{
-		return $parents_ref;
+		#$parents_ref = $return_ref;#changed parents_ref to return_ref due to "odd" error
+		return $return_ref;
 	}
 #	print "\nhash returned by ws : $parents_ref";
 	

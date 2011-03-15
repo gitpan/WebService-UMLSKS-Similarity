@@ -39,7 +39,6 @@ use warnings;
 use strict;
 no warnings qw/redefine/;
 
-
 #use lib "/home/mugdha/workspace/getInfo";
 
 package WebService::UMLSKS::GetUserData;
@@ -62,28 +61,46 @@ use Term::ReadKey;
 =head2 getUserDetails
 
 This sub takes username and password from user through command prompt.
-and returns a service object after it authenticates the user with the help of authenticate module.
 
 =cut
 
 sub getUserDetails {
 	my $self    = shift;
 	my $verbose = shift;
-
+	my $username = "";
+	my $pwd = "";
+	
 	# Get username and password to authenticate.
 	print "Enter username to connect to UMLSKS:";
-	my $username = <>;
+	$username = <>;
 	chomp $username;
 
 	print "Enter password:";
 	ReadMode 'noecho';
-	my $pwd = ReadLine 0;
+	$pwd = ReadLine 0;
 	ReadMode 'normal';
 	chomp $pwd;
+	$self->getService($verbose,$username,$pwd);
+
+}
+
+=head2 getService
+
+This sub returns a service object after it authenticates the user with the help 
+of authenticate module.
+
+=cut
+
+sub getService
+{
+	my $self = shift;
+	my $verbose = shift;
+	my $username = shift;
+	my $pwd = shift;
 	my $c = WebService::UMLSKS::ConnectUMLS->new;
 	my $service = $c->connect_umls( $username, $pwd, $verbose );
 	return $service;
-
+	
 }
 
 1;

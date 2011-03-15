@@ -2,6 +2,7 @@ package WebService::UMLSKS::Similarity;
 
 use warnings;
 use strict;
+use Log::Message::Simple qw[msg error debug];
 
 no warnings qw/redefine/;
 
@@ -16,7 +17,7 @@ Version 0.04
 
 =cut
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 =head1 SYNOPSIS
 
@@ -32,7 +33,8 @@ our $VERSION = '0.06';
     my $similarity2 = WebService::UMLS::Similarity->new({"sources" =>  \@source_list,"rels"   =>  \@relation_list }	);
     
     # Creating object of Similarity by providing Cinfiguration file path and name.
-    my $similarity3 = WebService::UMLS::Similarity->new({"config" => "/home/../config"}); 
+    my $similarity3 = WebService::UMLS::Similarity->
+    new({"config" => "/home/../config"}); 
 
 	Format of configuaration file
 
@@ -137,7 +139,7 @@ sub initialiseParameters {
 	
 	
 	if(defined $file_path_name && $file_path_name ne "") {
-			# If user has provi ded a configuration file
+			# If user has provided a configuration file
 		open( CONFIG, $file_path_name )
 		  or die("Error: cannot open configuration file '$file_path_name'\n");
 
@@ -146,13 +148,23 @@ sub initialiseParameters {
 			
 		#	print "\n $param";
 			$param =~ /\s*(.*)\s*::\s*(.*?) (.*?)$/;
-			#print "\n $1 \t $2 \t $3";
+			msg( "\n $1 \t $2 \t $3");
 			my $parameter_name = $1;
 			my $flag = $2;
 			my $parameter_value = $3;
+			my @parameter_array = ();
 			#my @parameter_array
-			my @parameter_array = split("," , $parameter_value); 
 			
+			# If more than one sources/relations specified, then seperate by comma
+			if($parameter_value =~ /\,/){
+				
+			 @parameter_array = split("," , $parameter_value); 
+			}
+			else{
+				
+			 $parameter_array[0] = $parameter_value;
+			 
+			}
 			$parameter_name =~ s/\s*//g;
 			#chop($parameter_name);
 		
@@ -160,7 +172,7 @@ sub initialiseParameters {
 			{
 				#print "\n including @parameter_array";
 				$self->{$parameter_name} = \@parameter_array;
-				#print "\n in hash $parameter_name: @{$self->{$parameter_name}}";
+				msg("\n in hash $parameter_name: @{$self->{$parameter_name}}");
 			}
 			elsif ($flag =~ /\bexclude\b/)
 			{

@@ -160,24 +160,26 @@ no warnings qw/redefine/;
 my $verbose = '';
 #GetOptions( 'verbose!' => \$verbose );
 
-my $filepath = '';
+my $log_file = '';
+my $patterns_file = '';
 my $sources = '';
 my $relations = '';
 my $similarity;
 my $config_file = '';
+my $login_file = '';
 
 #GetOptions( 'verbose!' => \$verbose );
 
 GetOptions( 'verbose:i' => \$verbose , 'sources=s' => \$sources , 'rels=s' =>\$relations,
- 'config=s' =>\$config_file, 'log=s' => \$filepath );
+ 'config=s' =>\$config_file, 'log=s' => \$log_file, 'login=s' => \$login_file ,'patterns=s',\$patterns_file);
 
 # Reference for use of Log package
 # http://perldoc.perl.org/Log/Message/Simple.html#msg(%22message-string%22-%5b%2cVERBOSE%5d)
 
 
-if($filepath ne '' && $verbose == 1){
+if($log_file ne '' && $verbose eq 1){
 
-open (LOG , '>>', $filepath);
+open (LOG , '>>', $log_file);
 
 
 $Log::Message::Simple::MSG_FH     = \*LOG;
@@ -198,13 +200,9 @@ my $theTime = "$hour:$minute:$second, $weekDays[$dayOfWeek] $months[$month] $day
 debug("\n*********************************\n Log written on :
 $theTime\n************************************", $verbose); 
 
-
-
-
-	
 }
 
-if(defined $config_file)
+if(defined $config_file && $config_file ne "")
 {
 	 $similarity = WebService::UMLSKS::Similarity->new({"config" => $config_file});
 	
@@ -215,7 +213,7 @@ else
 if($sources eq "" && $relations eq "")
 {
 	# use default things
-	print "\n creating default object of similarity";
+	msg("\n creating default object of similarity", $verbose);
 	 $similarity = WebService::UMLSKS::Similarity->new();
 }
 else{
@@ -269,22 +267,94 @@ my %ParentInfo ;
 # Declaring ListCUI : queue/ list of CUIs elligible for parent search
 
 my @ListCUI = ();
+my  $allowable_pattern_regex = '';
+	
+# Creating object of class GetUserData 
+my $g       = WebService::UMLSKS::GetUserData->new;
+my $service = "";
 
+if(defined $login_file && $login_file ne "")
+{
+	# Login details specified through the file
+	# call sub getService using object of GetUserData
+	# Receive a $service object if the user is a valid user.
+	
+	my $username = "";
+	my $pwd = "";
+	
+	open( LOGIN, $login_file )
+		  or die("Error: cannot open configuration file '$login_file'\n");
 
-#open (LOG ,">", "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/LOG1") or die "could not open log file";
+		my @login_details = <LOGIN>;
+		foreach my $detail (@login_details){
+			
+			#msg( "\n $detail", $verbose);
+			$detail =~ /\s*(.*)\s*::\s*(.*?)$/;
+			#print "\n $1 \t $2";
+			my $detail_name = $1;
+			my $detail_value = $2;
+			chomp($detail_value);
+			chomp($detail_name);
+			if($detail_name =~ /\b[Uu]sername\b/){
+				$username = $detail_value;
+			}
+			if($detail_name =~ /\b[pP]assword\b|\b[Pp]wd\b/){
+				$pwd = $detail_value;
+			}
+		}
+	
+	 $service = $g->getService($verbose, $username, $pwd);
+	
+		
+}
 
-
-# Creating object of class GetUserData and call the sub getUserDetails.
+else
+{
+# call the sub getUserDetails.
 # Receive a $service object if the user is a valid user.
 
-my $g       = WebService::UMLSKS::GetUserData->new;
-my $service = $g->getUserDetails($verbose);
+ $service = $g->getUserDetails($verbose);
+	
+}
+
+
 
 # User enetered wrong username or password.
 
 if ( $service == 0 ) {
 	$continue = 0;
 }
+
+
+# If allowable patterns are specified by user using the patterns_file then,
+# set the regex from the file
+
+if(defined $patterns_file && $patterns_file ne "")
+{
+
+	open( PATTERN, $patterns_file )
+		  or die("Error: cannot open configuration file '$patterns_file'\n");
+	
+	my @p = <PATTERN>;
+	 $allowable_pattern_regex = $p[0];
+	chomp($allowable_pattern_regex);
+	msg("allowable path regex: $allowable_pattern_regex",$verbose);
+
+}
+
+# Else, use the defualt regex representing the default set of allowable patterns
+
+else
+{
+	
+   # This regex is formed using the allowed paths' patterns given in HSO paper
+   # Here 1, denotes upward arrow/vector, 2 denotes downward arrow and 3 denoted
+   # horizontal arrows.
+	
+   $allowable_pattern_regex =  '\b1+\b|\b1+2+\b|\b1+3+\b|\b1+3+2+\b|\b2+\b|\b2+3+\b|\b3+2+\b|\b3+\b';
+}
+
+
 
 # Creating object of query and passing the method name along with parameters.
 
@@ -429,7 +499,8 @@ while ( $continue == 1 ) {
 		
 	# Check if both the inputs are same.
 	
-	my $return_val = $form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations);
+	msg("\n before calling form grpah : regex: $allowable_pattern_regex", $verbose);
+	my $return_val = $form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,$allowable_pattern_regex);
 	if($return_val eq 'same'){
 		next;
 	}
