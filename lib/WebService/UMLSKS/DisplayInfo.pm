@@ -69,6 +69,7 @@ sub display_object {
 	my $self = shift;
 	my $object_refr = shift;
 	my $return_ref = format_object ($object_refr);
+	#print "\n array : @t";
 	return $return_ref;
 }
 
@@ -167,6 +168,8 @@ sub format_homogeneous_hash {
 
 	#print "hash{";
 	foreach my $att ( keys %$hash_ref ) {    #---- removed rels
+		
+		
 		 #Follwing regular expression is used to display just the required information.
 		if ( $att =~
 /\bqueryInput\b|\brelease\b|\bkey\b|\bempty\b|\bperformance\b|\bperformanceMode\b|\bRAs\b|\bCAs\b|\bSTYs\b|\bdefs\b|\bConcept\b|\bterms\b|\bSGs\b|\bCOCs\b|\bCXTs\b|\bcontentClass\b|\bcontentClassName\b|\bSATUI\b|\bDefinition\b|\bAUI\b|\bATUI\b|\bcontents\b|\brels\b/
@@ -193,6 +196,7 @@ sub format_homogeneous_hash {
 					print "Preferred Term";
 				}
 				else {
+					
 					print $att;
 				}
 				print ":";
@@ -201,7 +205,7 @@ sub format_homogeneous_hash {
 				#print "\t";
 				#indent($indentation);
 				print $hash_ref->{$att};
-
+			
 			}
 		}
 	

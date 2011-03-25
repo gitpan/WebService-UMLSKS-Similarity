@@ -94,10 +94,10 @@ sub ConnectUMLS::get_pt to get the proxy ticket using a web service.
 sub ConnectUMLS::connect_umls to connect to UMLS by sending username 
 and password and getting back a proxy ticket.
 
-=item package ValidateCUI
+=item package ValidateTerm
 
-sub ValidateCUI::validateCUI to accepts an input and validates it 
-for as valid or invalid CUI.
+sub ValidateCUI::validateTerm to accepts an input and validates it 
+for as valid or invalid CUI or a term.
 
 =item package GetUserData
 
@@ -132,13 +132,14 @@ use warnings;
 use SOAP::Lite;
 use Term::ReadKey;
 use WebService::UMLSKS::GetUserData;
-use WebService::UMLSKS::ValidateCUI;
+use WebService::UMLSKS::ValidateTerm;
 #use WebService::UMLSKS::FindPaths;
 use WebService::UMLSKS::Query;
 use WebService::UMLSKS::ConnectUMLS;
 use WebService::UMLSKS::GetParents;
 use WebService::UMLSKS::Similarity;
 use WebService::UMLSKS::MakeGraph;
+use WebService::UMLSKS::GetCUIs;
 use Log::Message::Simple qw[msg error debug];
 
 #use get_all_associatedCUIs;
@@ -295,12 +296,20 @@ if(defined $login_file && $login_file ne "")
 			my $detail_value = $2;
 			chomp($detail_value);
 			chomp($detail_name);
-			if($detail_name =~ /\b[Uu]sername\b/){
+			if($detail_name ne "" && $detail_value ne ""){
+				if($detail_name =~ /\b[Uu]sername\b/){
 				$username = $detail_value;
-			}
-			if($detail_name =~ /\b[pP]assword\b|\b[Pp]wd\b/){
+				}
+				if($detail_name =~ /\b[pP]assword\b|\b[Pp]wd\b/){
 				$pwd = $detail_value;
+				}
 			}
+			else
+			{
+				print "\n Invalid login file";
+				exit;
+			}
+			
 		}
 	
 	 $service = $g->getService($verbose, $username, $pwd);
@@ -336,8 +345,26 @@ if(defined $patterns_file && $patterns_file ne "")
 		  or die("Error: cannot open configuration file '$patterns_file'\n");
 	
 	my @p = <PATTERN>;
-	 $allowable_pattern_regex = $p[0];
-	chomp($allowable_pattern_regex);
+	my $allowable_regex = $p[0];
+	 msg ("\n regex from file is : $allowable_regex", $verbose);
+	chomp($allowable_regex);
+	$allowable_regex =~ s/\s*//g;
+	#my $regex;
+	if($allowable_regex =~ m/^\// && $allowable_regex =~ m/\/$/)
+		{
+				msg( "\n regex is valid",$verbose);
+				$allowable_regex =~  m/^\/(.*)\/$/;
+				$allowable_pattern_regex = $1;
+				msg ("\n regex extracted is : $allowable_pattern_regex", $verbose);
+		}
+		else
+		{
+			print "\n You entered Invalid regex in patterns file";
+			exit;
+			
+		}
+	#$allowable_pattern_regex =~ chop($allowable_pattern_regex);
+	#$allowable_pattern_regex =~ s/^\///g;
 	msg("allowable path regex: $allowable_pattern_regex",$verbose);
 
 }
@@ -351,7 +378,7 @@ else
    # Here 1, denotes upward arrow/vector, 2 denotes downward arrow and 3 denoted
    # horizontal arrows.
 	
-   $allowable_pattern_regex =  '\b1+\b|\b1+2+\b|\b1+3+\b|\b1+3+2+\b|\b2+\b|\b2+3+\b|\b3+2+\b|\b3+\b';
+   $allowable_pattern_regex = '\b1+\b|\b1+2+\b|\b1+3+\b|\b1+3+2+\b|\b2+\b|\b2+3+\b|\b3+2+\b|\b3+\b';
 }
 
 
@@ -368,37 +395,31 @@ my $c = WebService::UMLSKS::ConnectUMLS->new;
 
 my $read_parents = WebService::UMLSKS::GetParents->new;
 
-# Creating  FindPaths object to get back shortest path between two input terms.
+# Creating  GetCUIs object to get back CUIs related to terms.
 
-#my $get_paths = WebService::UMLSKS::FindPaths->new;
+my $get_CUIs = WebService::UMLSKS::GetCUIs->new;
 
 # Creating object of MakeGraph
 
 my $form_graph = WebService::UMLSKS::MakeGraph->new;
 
-# Creating  GetAllCUIs object to get back all the associated CUIs related to 
-# two input terms.
-
-#my $get_allCUIs = new GetAllCUIs;
-
+my $proxy_ticket = $c->get_pt();
 
 while ( $continue == 1 ) {
 
 	# After the authentication, accept a first query term or CUI from the user.
-
 	print "\nEnter first query CUI:";
 	my $term1 = <>;
 
 	# Remove white spaces.
-
 	chomp($term1);
+	
 	# If user enters 'stop', exit the program.
 	if ( $term1 =~ /stop/i ) {
 		exit;
 	}
 
 	# Else continue with asking the new query term.
-
 	else {
 
 	# After the authentication, accept a first query term or CUI from the user.
@@ -407,103 +428,169 @@ while ( $continue == 1 ) {
 	my $term2 = <>;
 
 	# Remove white spaces.
-
 	chomp($term2);
 
-	
+	if ( $term1 =~ /stop/i ) {
+		exit;
+	}
 
-		my $qterm1 = $term1;
 
-		#print "term1 is $term1";
-		my $qterm2 = $term2;
+	# Validate the term by passing it to the sub validateTerm which belongs to class getTerm.
+	# Create object of class getTerm to access the sub validateTerm.
 
-		#print "term2 is $term2";
-
-# Validate the term by passing it to the sub validateTerm which belongs to class getTerm.
-# Create object of class getTerm to access the sub validateTerm.
-
-		my $valid       = WebService::UMLSKS::ValidateCUI->new;
-		my $isvalid_CUI1 = $valid->validateCUI($term1);
-		my $isvalid_CUI2 = $valid->validateCUI($term2);
+		my $valid        = WebService::UMLSKS::ValidateTerm->new;
+		my $isvalid_input1 = $valid->validateTerm($term1);
+		my $isvalid_input2 = $valid->validateTerm($term2);
 
 	  # Depending on the value returned by validateTerm form a query for UMLSKS.
 
-		my $cui1 = ' ';
-		my $cui2 = ' ';
-	
-	#	my @allCUIOfTerm1 = ();
-	#	my @allCUIOfTerm2 = ();
-	
-		my $proxy_ticket = $c->get_pt();
+		my @allCUIOfTerm1 = ();
+		my @allCUIOfTerm2 = ();
 
-
-		if($isvalid_CUI1 == 10 || $isvalid_CUI2 == 10)
+		# If the inputs are invalid, accepts new input
+		if($isvalid_input1 eq 'invalid') 
 		{
-			print "\n* Your input(s) are not valid CUIs";
+			print "\n* Your first input is not a valid CUI";
 			next;
 		}
-
-		$qterm1 = $term1;
-		#print LOG "\ncui1 is $cui1";
-		$isvalid_CUI1 = 2;
-
-
-# If the second input entered by user is term, call findCUIByExact webservice 
-# through the sub  call_findCUIByExact, to get back the CUI.
-
-
-		$qterm2 = $term2;
-		#print LOG "\n cui2 is $cui2";
-		$isvalid_CUI2 = 2;
-
-
-# ValidateTerm returns $isTerm_CUI1 = 2 for first input, if the input entered 
-# by the user is a valid CUI.
-# Call getConceptProperties web service and get back the information.
-
-		if ( $isvalid_CUI1 == 2 ) {
-			
-			#print "\n term1 cui is $qterm1 ";
-			# Push cui in list ListCUI.
-			push( @ListCUI, $qterm1 );
-
-			#my $pref1 = call_getconceptproperties( $term1, $cui1 );
-			msg( "\n Query term:$term2 " , $verbose);
-			
-			
-			#my $object_f = $read_parents->read_object($pref1);
-
-		}
-
-# ValidateTerm returns $isTerm_CUI2 = 2 for second input, if the input entered
-# by the user is a valid CUI. 
-# Call getConceptProperties web service and get back the information.
-
-		if ( $isvalid_CUI2 == 2 ) {
-			
-			#print "\n term2 cui is $qterm2 ";
-			# Push cui in list ListCUI.
-			push( @ListCUI, $qterm2 );
-
-			#my $pref2 = call_getconceptproperties( $term2, $cui2 );
-			#print "\n  Query term:$term2";
-			msg( "\n Query term:$term2 " , $verbose);
-			#my $object_f = $read_parents->read_object($pref2);
-
+		elsif($isvalid_input2 eq 'invalid') 
+		{
+			print "\n* Your first input is not a valid CUI";
+			next;
 		}
 		
-# Calling formGraph to make a graph and find the allowable shortest path
-
-		my $t1 = shift(@ListCUI);
-		my $t2 = shift(@ListCUI);
+		# else inputs are either valid CUIs or terms
+		else
+		{
+			
+			# Check if input1 is term or CUI
+							
+			# If the input entered by user is term, call findCUIByExact webservice,
+			# to get back the CUI.
+			if($isvalid_input1 eq 'term')
+			{
+				my %CUI_ref = %{$get_CUIs->get_CUI_info($service,$term1)};
+				if(!%CUI_ref)
+				{
+					print "\n Term $term1 does not exist in database.";
+					next;
+				}
+				else
+				{
+					print "\n Informtion about first input term : $term1 ->";
+					foreach my $c (keys %CUI_ref){
+						push(@allCUIOfTerm1,$CUI_ref{$c});
+						print "\nPreffered term : $c and CUI : $CUI_ref{$c}";
+					}
+										
+				}
+			}
+			elsif($isvalid_input1 eq 'cui'){
+					print "\nFirst input is a CUI: $term1";
+					push(@allCUIOfTerm1,$term1);
+			}
+			
+			# Check if input2 is term or CUI
+							
+			# If the input entered by user is term, call findCUIByExact webservice,
+			# to get back the CUI.
+			if($isvalid_input2 eq 'term')
+			{
+				my %CUI_ref = %{$get_CUIs->get_CUI_info($service,$term2)};
+				if(!%CUI_ref)
+				{
+					print "\n Term $term2 does not exist in database.";
+					next;
+				}
+				else
+				{
+					print "\n Informtion about second input term : $term2 ->";
+					foreach my $c (keys %CUI_ref){
+						push(@allCUIOfTerm2,$CUI_ref{$c});
+						print "\nPreffered term : $c and CUI : $CUI_ref{$c}";
+					}
+										
+				}
+			}
+			elsif($isvalid_input2 eq 'cui'){
+					print "\nSecond input is a CUI: $term2";
+					push(@allCUIOfTerm2,$term2);
+			}			
+		}
 		
-	# Check if both the inputs are same.
+		my $t1 = "";
+		my $t2 = "";
+		
+		
+		#print "\n arrays are \n cuis of term 1 : @allCUIOfTerm1 cuis of term2 : @allCUIOfTerm2";
+		
+		if($#allCUIOfTerm1 == 0 && $#allCUIOfTerm2 == 0){
+		#	print "\nJust one CUI for both terms";
+			msg("Both the terms have just one CUI",$verbose);
+						
+			# Calling formGraph to make a graph and find the allowable shortest path
 	
-	msg("\n before calling form grpah : regex: $allowable_pattern_regex", $verbose);
-	my $return_val = $form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,$allowable_pattern_regex);
-	if($return_val eq 'same'){
-		next;
-	}
+			 $t1 = $allCUIOfTerm1[0];
+			 $t2 = $allCUIOfTerm2[0];
+			
+			# Check if both the inputs are same.
+		
+			msg("\n before calling form grpah : regex: $allowable_pattern_regex", $verbose);
+			my $return_val = $form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,$allowable_pattern_regex);
+			if($return_val eq 'same'){
+			next;
+			}			
+		
+		}
+		
+		else
+		{
+			#print "\n cuis of 1 : @allCUIOfTerm1, cuis of 2 : @allCUIOfTerm2";
+			print "\n Do you want to calculate Semantic Relatedness between all the combinations of the CUIs (y/n):";
+			my $option = <>;
+			chomp($option);
+			#print "\n option is : $option";
+			if($option eq 'y'){
+				#print "\n inside for loops";
+				my $i;
+				my $j;
+				for($i = 0; $i <= $#allCUIOfTerm1; $i++){
+					
+					for ($j = 0 ; $j <= $#allCUIOfTerm2; $j++){
+						#print "\n in both loops";
+						my $t1 = $allCUIOfTerm1[$i];
+						my $t2 = $allCUIOfTerm2[$j];
+						print "\n\nterm 1 : $t1 term 2 : $t2";
+						my $return_val = 
+						$form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations, $allowable_pattern_regex);
+						if($return_val eq 'same'){
+							print "\n $t1 and $t2 are same";
+							next;
+						}	
+					}
+				
+				}
+			
+				
+			}
+			else
+			{
+				#print "\n cuis of term 1 ; @allCUIOfTerm1, cuis of term 2 @allCUIOfTerm2";
+				
+				 $t1 = $allCUIOfTerm1[0];
+			 	 $t2 = $allCUIOfTerm2[0];
+			
+				my $return_val = $form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,$allowable_pattern_regex);
+				if($return_val eq 'same'){
+					next;
+				}			
+				
+			}
+		}
+			
+
+
+
 	}
 	
 }

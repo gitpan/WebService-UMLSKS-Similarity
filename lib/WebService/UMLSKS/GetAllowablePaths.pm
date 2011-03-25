@@ -236,7 +236,7 @@ sub get_allowable_paths {
 	# Currently any length of vector is allowed.
 	#my $allowed_patterns_regex = "";
 	#$allowed_patterns_regex = "$regex";
-	# default : '\b1+\b|\b1+2+\b|\b1+3+\b|\b1+3+2+\b|\b2+\b|\b2+3+\b|\b3+2+\b|\b3+\b';
+	# default : '/\b1+\b|\b1+2+\b|\b1+3+\b|\b1+3+2+\b|\b2+\b|\b2+3+\b|\b3+2+\b|\b3+\b/';
 	 
 	msg ("\nin allowable paths : regex is : $allowed_patterns_regex",$verbose);
 	

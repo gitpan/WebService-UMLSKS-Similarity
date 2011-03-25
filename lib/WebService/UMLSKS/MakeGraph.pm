@@ -46,7 +46,27 @@ package WebService::UMLSKS::MakeGraph;
 use Log::Message::Simple qw[msg error debug];
 
 my %node_cost = ();
-my %Graph = ();
+my %Graph =();
+
+
+
+my %MetaCUIs =('C0332280' => 'Linkage concept',
+			   'C1274012' => 'Ambiguous concept',
+			   'C1274014' => 'Outdated concept',
+			   'C1276325' => 'Reason not stated concept',
+			   'C1274013' => 'Duplicate concept',
+			   'C1264758' => 'Inactive concept',
+			   'C1274015' => 'Erroneous concept',
+			   'C1274021' => 'Moved elsewhere',
+			   'C2733115' => 'Limited status concept',
+			   'C1299995' => 'Namespace concept',
+			   'C1285556' => 'Navigational concept',
+			   'C1298232' => 'Special concept',
+			     );
+
+	
+ 
+
 
 my @sources = ();
 my @relations = ();
@@ -177,8 +197,10 @@ while ( $#queue != -1 ) {
 		}
 		@parents = @$neighbors_info_ref;
 		foreach my $p (@parents){
+			unless($p ~~ %MetaCUIs){
 			$Graph{$current_node}{$p} = 1;
 			$Graph{$p}{$current_node} = 2;
+			}
 		}
 	}
 	
@@ -195,6 +217,7 @@ while ( $#queue != -1 ) {
 		if ( $#parents != -1 ) {
 			foreach my $parent (@parents) {
 				msg( "\n parent is : $parent" , $verbose);
+				unless ( $parent ~~ %MetaCUIs){
 				unless ( $parent ~~ @visited ) {
 					msg( "\n parent $parent not visited");
 					my $total_cost_till_parent =
@@ -213,6 +236,7 @@ while ( $#queue != -1 ) {
 
 					}
 				}
+				}
 
 			}
 
@@ -221,6 +245,7 @@ while ( $#queue != -1 ) {
 		if ( $#sib != -1 ) {
 			foreach my $sib (@sib) {
 				#print "\n sibling is : $sib";
+				unless ($sib ~~ %MetaCUIs){
 				unless ( $sib ~~ @visited ) {
 					#print "\n sibling $sib not visited";
 					my $total_cost_till_sib = $cost_upto_current_node + $scost;
@@ -239,6 +264,8 @@ while ( $#queue != -1 ) {
 
 					}
 				}
+				
+			}
 
 			}
 

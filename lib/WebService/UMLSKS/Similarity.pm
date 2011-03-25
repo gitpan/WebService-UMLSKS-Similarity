@@ -17,7 +17,7 @@ Version 0.04
 
 =cut
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 =head1 SYNOPSIS
 
@@ -153,8 +153,11 @@ sub initialiseParameters {
 			my $flag = $2;
 			my $parameter_value = $3;
 			my @parameter_array = ();
+			$parameter_name =~ s/\s*//g;
+			$parameter_value =~ s/\s*//g;
+			$flag =~ s/\s*//g;
 			#my @parameter_array
-			
+			if (defined $parameter_name && defined $flag && defined $parameter_value){
 			# If more than one sources/relations specified, then seperate by comma
 			if($parameter_value =~ /\,/){
 				
@@ -177,9 +180,16 @@ sub initialiseParameters {
 			elsif ($flag =~ /\bexclude\b/)
 			{
 				# Dont do anything for now
+				print "\n Invalid configurations: does not handle exclude yet";
 				
 			}
 			else
+			{
+				print "\n Invalid configurations";
+			}
+			}
+			else
+			
 			{
 				print "\n Invalid configurations";
 			}

@@ -80,23 +80,23 @@ sub validateTerm {
 		if ( $term =~ /^C\d{7}$/ ) {
 			if ( $term =~ /C0000000/ ) {
 				#print "It is a invalid CUI.";
-				return 10;
+				return 'invalid';
 			}
 			else {
 
 				#print "it is a CUI";
-				return 2;
+				return 'cui';
 			}
 		}
 		else {
 			#print "It is a invalid CUI.";
-			return 10;
+			return 'invalid';
 		}
 	}
 	else {
 
 		#print "term";
-		return 3;
+		return 'term';
 	}
 
 }

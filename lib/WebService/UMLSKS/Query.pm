@@ -107,7 +107,8 @@ sub runQuery {
 		#if (!defined $contents_ref){
 		#	return 'empty';
 		#}
-		if (!defined $contents_ref | !@$contents_ref) {
+		
+		if (!defined $contents_ref | !$contents_ref) {
 
 			# if content_ref is empty
 			#print "There is no information for your query term/CUI in database.";

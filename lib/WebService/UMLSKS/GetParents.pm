@@ -113,7 +113,7 @@ sub read_object {
 		return $parents_ref;		
 	}
 	else{
-		print "\n No parents found for $qterm in current Source/s";
+		#msg( "\n No parents found for $qterm in current Source/s", $verbose);
 		return 'empty';
 	}
 	

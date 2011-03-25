@@ -120,7 +120,7 @@ The authentication process is done by 'authenticate' module and includes four st
 
 =item 3. Get proxy ticket using the proxy granting ticket.
 
-=item 4. Initialise UMLSKS web service using SOAP::Lite.
+=item 4. Initialize UMLSKS web service using SOAP::Lite.
 
 =cut
 
