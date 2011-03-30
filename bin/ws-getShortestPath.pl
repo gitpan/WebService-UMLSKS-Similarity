@@ -17,19 +17,67 @@ ws-getShortestPath
 
 =pod
 
-perl ws-getShortestPath.pl -verbose -sources SNOMEDCT,MSH --rels PAR,CHD --config configfilename 
+perl ws-getShortestPath.pl --verbose 1 -sources SNOMEDCT,MSH --rels PAR,CHD --config configfilename --login loginfile --patterns patternsfile
 
---verbose: Sets verbose flag to true and thus displays all the authentication information for the user.
+--verbose: Sets verbose flag to true if value is set to 1, and thus displays all the authentication information for the user.
 
--sources : UMLS sources can be specified by providing list of sources seperated
+--sources : UMLS sources can be specified by providing list of sources seperated
 by comma. These sources will be used to query and retrieve the information.
 
--rels :  UMLS relations can be specified by providing list of relations seperated
+--rels :  UMLS relations can be specified by providing list of relations seperated
 by comma. These relations will be used to query and retrieve the information.
 
--config : Instead of providing sources and relations on command line, they can be
+--config : Instead of providing sources and relations on command line, they can be
 specified using a configuration file, which can be provided with this option.
-It takes complete path and name of the file
+It takes complete path and name of the file. The config file is expected in following format:
+
+=cut
+
+=pod
+
+=over
+
+=item SAB :: SNOMEDCT,MSH
+
+=item REL :: PAR
+ 
+=back 
+
+=cut
+
+=pod
+
+--login : User can specify login credentials through the file, which should be of form:
+
+=over
+
+=item username :: xyz
+
+=item password :: pqr
+ 
+=back
+ 
+--patterns : User can specify the set of allowable patterns that should be used while calculating
+an allowable path. This options accepts a regex inside a file specified by patternsfile.
+
+The regex may be of form :
+
+/\b1+\b|\b1+2+\b|\b1+3+\b|\b1+3+2+\b|\b2+\b|\b2+3+\b|\b3+2+\b|\b3+\b/
+
+1 : upward arrow
+
+2: downward arrow
+
+3: Horizontal arrow
+
+Each regex is seperated from another using | (or). Each regex represents one allowed pattern from the set.
+
+Right now, the vector length of any size is allowed in the allowed direction,
+
+For example, 
+
+\b1+\b : means a path which consists of one or more than one upward arrows is allowed. 
+
 Follwing is a sample output
 
 =over
@@ -51,7 +99,7 @@ Follwing is a sample output
 =item path is->Body part (C0229962)->Body Regions (C0005898)->Anatomic structures (C0700276)->Physical anatomical entity (C0506706)->Body structure (C1268086)->SNOMED CT (C1623497)
 C1879289 C1616556
 
-C0015392 C0015392
+
 =item Enter first query CUI:stop
 
 =back
@@ -455,7 +503,7 @@ while ( $continue == 1 ) {
 		}
 		elsif($isvalid_input2 eq 'invalid') 
 		{
-			print "\n* Your first input is not a valid CUI";
+			print "\n* Your second input is not a valid CUI";
 			next;
 		}
 		
@@ -469,7 +517,7 @@ while ( $continue == 1 ) {
 			# to get back the CUI.
 			if($isvalid_input1 eq 'term')
 			{
-				my %CUI_ref = %{$get_CUIs->get_CUI_info($service,$term1)};
+				my %CUI_ref = %{$get_CUIs->get_CUI_info($service,$term1,\@sources)};
 				if(!%CUI_ref)
 				{
 					print "\n Term $term1 does not exist in database.";
@@ -477,10 +525,10 @@ while ( $continue == 1 ) {
 				}
 				else
 				{
-					print "\n Informtion about first input term : $term1 ->";
+					print "\n Information about first input term : $term1 ->";
 					foreach my $c (keys %CUI_ref){
 						push(@allCUIOfTerm1,$CUI_ref{$c});
-						print "\nPreffered term : $c and CUI : $CUI_ref{$c}";
+						print "\nPreferred term : $c and CUI : $CUI_ref{$c}";
 					}
 										
 				}
@@ -496,7 +544,7 @@ while ( $continue == 1 ) {
 			# to get back the CUI.
 			if($isvalid_input2 eq 'term')
 			{
-				my %CUI_ref = %{$get_CUIs->get_CUI_info($service,$term2)};
+				my %CUI_ref = %{$get_CUIs->get_CUI_info($service,$term2,\@sources)};
 				if(!%CUI_ref)
 				{
 					print "\n Term $term2 does not exist in database.";
@@ -504,10 +552,10 @@ while ( $continue == 1 ) {
 				}
 				else
 				{
-					print "\n Informtion about second input term : $term2 ->";
+					print "\n Information about second input term : $term2 ->";
 					foreach my $c (keys %CUI_ref){
 						push(@allCUIOfTerm2,$CUI_ref{$c});
-						print "\nPreffered term : $c and CUI : $CUI_ref{$c}";
+						print "\nPreferred term : $c and CUI : $CUI_ref{$c}";
 					}
 										
 				}

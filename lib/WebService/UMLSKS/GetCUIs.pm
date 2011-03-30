@@ -39,6 +39,7 @@ use SOAP::Lite;
 use warnings;
 use WebService::UMLSKS::ConnectUMLS;
 no warnings qw/redefine/;
+use WebService::UMLSKS::Similarity;
 
 
 package WebService::UMLSKS::GetCUIs;
@@ -47,6 +48,10 @@ my $got_term = 0;
 my $term = "";
 my $cui = "";
 my %TermCUI = ();
+
+
+
+
 
 
 # Creating Connect object to call sub get_pt while forming a query.
@@ -78,7 +83,12 @@ sub get_CUI_info
 	my $self = shift;
 	my $service = shift;
 	my $query_term = shift;
+	my $s_ref = shift;
 	%TermCUI = ();	
+	
+	my @sources = @$s_ref;
+	
+	
 	# query
 	$service->readable(1);
 	my $ws_result_ref = run_query($service,
@@ -92,7 +102,8 @@ sub get_CUI_info
 		   searchString => SOAP::Data->type(string => $query_term),
 		   language => 'ENG',
 		   release => '2010AB',
-		   SABs => [qw( SNOMEDCT )],
+		   SABs => [(@sources)],
+		   #SABs => [qw( SNOMEDCT )],
 		   includeSuppressibles => 'false',
 		  },
 		 );

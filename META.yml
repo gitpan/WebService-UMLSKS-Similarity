@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               WebService-UMLSKS-Similarity
-version:            0.08
+version:            0.09
 abstract:           access the Unified Medical Language System (UMLS) via Webservices
 author:
     - Mugdha Choudhari <choudhary.mugdha@gmail.com> , Ted Pedersen <tpederse@d.umn.edu>
@@ -11,8 +11,9 @@ configure_requires:
 build_requires:
     ExtUtils::MakeMaker:  0
 requires:
-    SOAP::Lite:  0.71
-    Test::More:  0
+    Crypt::SSLeay:  0
+    SOAP::Lite:     0.71
+    Test::More:     0
 no_index:
     directory:
         - t

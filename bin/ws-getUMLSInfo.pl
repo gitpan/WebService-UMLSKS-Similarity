@@ -17,21 +17,42 @@ ws-getUMLSInfo
 
 =pod
 
-perl ws-getUMLSInfo.pl -verbose -sources SNOMEDCT,MSH --rels PAR,CHD --config configfilename 
+perl ws-getUMLSInfo.pl --verbose 1 --sources SNOMEDCT,MSH --rels PAR,CHD --config configfilename --login loginfilename
 
---verbose: Sets verbose flag to true and thus displays all the authentication information for the user.
+--verbose: Sets verbose to true if you give value 1
+and thus displays debug information in log for the user.
 
--sources : UMLS sources can be specified by providing list of sources seperated
+--sources : UMLS sources can be specified by providing list of sources seperated
 by comma. These sources will be used to query and retrieve the information.
 
--rels :  UMLS relations can be specified by providing list of relations seperated
+--rels :  UMLS relations can be specified by providing list of relations seperated
 by comma. These relations will be used to query and retrieve the information.
 
--config : Instead of providing sources and relations on command line, they can be
+--config : Instead of providing sources and relations on command line, they can be
 specified using a configuration file, which can be provided with this option.
-It takes complete path and name of the file.
+It takes complete path and name of the file. The config file is expected in following format:
 
-Follwing is a sample output
+
+=over
+
+=item SAB :: SNOMEDCT,MSH
+
+=item REL :: PAR
+ 
+=back 
+
+
+-login : User can specify login credentials through the file, which should of of form:
+
+=over
+
+=item username :: xyz
+
+=item password :: pqr
+ 
+=back
+
+Follwing is a sample output of the program
 
 =over
 
@@ -43,7 +64,7 @@ Follwing is a sample output
 
 =item Query term:migraine  
           
-=item Preferred Term:Migraine Disorders
+=item Prefered Term:Migraine Disorders
                               
 =item DEF:neural condition characterized by a severe recurrent vascular headache, usually on one side of the head, often accompanied by nausea, vomiting, and photophobia, sometimes preceded by sensory disturbances; triggers include allergic reactions, excess carbohydrates or iodine in the diet, alcohol, bright lights or loud noises.
 
@@ -172,15 +193,19 @@ no warnings qw/redefine/;
 # This is set to true if you use --verbose option.
 # This is set to false if you use --noverbose option.
 
-my $verbose = '';
-my $sources = '';
-my $relations = '';
+my $verbose = "";
+my $sources = "";
+my $relations = "";
 my $similarity;
-my $config_file = '';
+my $config_file = "";
+my $login_file = "";
+my $service = "";
+my $cui   = "";
 
 #GetOptions( 'verbose!' => \$verbose );
 
-GetOptions( 'verbose=s' => \$verbose , 'sources=s' => \$sources , 'rels=s' =>\$relations, 'config=s' =>\$config_file );
+GetOptions( 'verbose=s' => \$verbose , 'sources=s' => \$sources , 'rels=s' =>\$relations, 'config=s' =>\$config_file,
+'login=s' => \$login_file );
 
 #print "\n sources : $sources";
 
@@ -245,7 +270,58 @@ my $object_ref;
 # Receive a $service object if the user is a valid user.
 
 my $g       = WebService::UMLSKS::GetUserData->new;
-my $service = $g->getUserDetails($verbose);
+#my $service = $g->getUserDetails($verbose);
+
+if(defined $login_file && $login_file ne "")
+{
+	# Login details specified through the file
+	# call sub getService using object of GetUserData
+	# Receive a $service object if the user is a valid user.
+	
+	my $username = "";
+	my $pwd = "";
+	
+	open( LOGIN, $login_file )
+		  or die("Error: cannot open configuration file '$login_file'\n");
+
+		my @login_details = <LOGIN>;
+		foreach my $detail (@login_details){
+			
+			#msg( "\n $detail", $verbose);
+			$detail =~ /\s*(.*)\s*::\s*(.*?)$/;
+			#print "\n $1 \t $2";
+			my $detail_name = $1;
+			my $detail_value = $2;
+			chomp($detail_value);
+			chomp($detail_name);
+			if($detail_name ne "" && $detail_value ne ""){
+				if($detail_name =~ /\b[Uu]sername\b/){
+				$username = $detail_value;
+				}
+				if($detail_name =~ /\b[pP]assword\b|\b[Pp]wd\b/){
+				$pwd = $detail_value;
+				}
+			}
+			else
+			{
+				print "\n Invalid login file";
+				exit;
+			}
+			
+		}
+	 $service = $g->getService($verbose, $username, $pwd);
+}
+
+else
+{
+# call the sub getUserDetails.
+# Receive a $service object if the user is a valid user.
+
+ $service = $g->getUserDetails($verbose);
+	
+}
+
+
 
 # User enetered wrong username or password.
 
@@ -293,7 +369,7 @@ while ( $continue == 1 ) {
 		#print $isTerm_CUI;
 		
 		
-		if($isTerm_CUI == 10)
+		if($isTerm_CUI eq 'invalid')
 		{
 			print "\n Your input is not valid CUI.";
 			next;
@@ -303,14 +379,14 @@ while ( $continue == 1 ) {
    # Creating object of query and passing the method name along with parameters.
 
 		my $query = WebService::UMLSKS::Query->new;
-		my $cui   = ' ';
+		
 		
 		
 		
 
 # If the input entered by user is term, call findCUIByExact webservice, to get back the CUI.
 
-		if ( $isTerm_CUI == 3 ) {
+		if ( $isTerm_CUI eq 'term' ) {
 
 # following sub describes the details like the method name to be called, term to be searched etc.
 			$service->readable(1);
@@ -328,8 +404,8 @@ while ( $continue == 1 ) {
 					release      => '2009AA',
 					#SABs => [( $source )],
 					#SABs => [($sources[0])],
-					#SABs => [(@sources)],
-					SABs => [qw(SNOMEDCT)],
+					SABs => [(@sources)],
+					#SABs => [qw(SNOMEDCT)],
 					includeSuppressibles => 'false',
 				},
 			);
@@ -337,9 +413,9 @@ while ( $continue == 1 ) {
 			
 
 # runQuery returns undefined value if the entered term does not exist in the UMLS database.
-
-			unless ( $cui ne "" ) {
-				print "Term/CUI does not exist";
+			
+			if (!$cui) {
+				print "Term/CUI does not exist.";
 				next;
 			}
 
@@ -356,7 +432,7 @@ while ( $continue == 1 ) {
 					$term = $cui;
 
 					#print "now term is $cui";
-					$isTerm_CUI = 2;
+					$isTerm_CUI = 'cui';
 				}
 			}
 
@@ -366,7 +442,7 @@ while ( $continue == 1 ) {
 
 # If the input entered by the user is a CUI, call getConceptProperties web service and get back the information.
 
-		if ( $isTerm_CUI == 2 ) {
+		if ( $isTerm_CUI eq 'cui' ) {
 
 			#print"calling getconceptproperties";
 
@@ -385,8 +461,8 @@ while ( $continue == 1 ) {
 					# CUI => "asfa",
 					language => 'ENG',
 					release  => '2009AA',
-					#SABs => [(@sources)],
-					SABs => [qw( SNOMEDCT )],
+					SABs => [(@sources)],
+					#SABs => [qw( SNOMEDCT )],
 					includeConceptAttrs  => 'false',
 					includeSemanticTypes => 'false',
 					includeTerminology   => 'false',

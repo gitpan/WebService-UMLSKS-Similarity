@@ -128,7 +128,16 @@ sub runQuery {
 					while ( my ( $key, $value ) = each(%$val) ) {
 						if ( $key =~ /CUI/ ) {					
 							my $cui = $value;
-							return $cui;
+							if($cui)
+							{
+								return $cui;
+								
+							}
+							else
+							{
+								return 'empty';
+							}
+							
 						}
 					}
 				}

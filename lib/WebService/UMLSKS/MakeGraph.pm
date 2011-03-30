@@ -325,6 +325,11 @@ if (@current_shortest_path ){
 	msg("\n Final path cost : $final_cost", $verbose);
 	
 }
+else
+
+{
+	print "\n No shortest path found between the input terms/CUIs\n";	
+}
 
 
 
