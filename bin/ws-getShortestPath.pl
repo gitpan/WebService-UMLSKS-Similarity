@@ -184,7 +184,7 @@ use WebService::UMLSKS::ValidateTerm;
 #use WebService::UMLSKS::FindPaths;
 use WebService::UMLSKS::Query;
 use WebService::UMLSKS::ConnectUMLS;
-use WebService::UMLSKS::GetParents;
+#use WebService::UMLSKS::GetParents;
 use WebService::UMLSKS::Similarity;
 use WebService::UMLSKS::MakeGraph;
 use WebService::UMLSKS::GetCUIs;
@@ -213,13 +213,14 @@ my $log_file = '';
 my $patterns_file = '';
 my $sources = '';
 my $relations = '';
+my $directions = '';
 my $similarity;
 my $config_file = '';
 my $login_file = '';
 
 #GetOptions( 'verbose!' => \$verbose );
 
-GetOptions( 'verbose:i' => \$verbose , 'sources=s' => \$sources , 'rels=s' =>\$relations,
+GetOptions( 'verbose:i' => \$verbose , 'sources=s' => \$sources , 'rels=s' =>\$relations, 'dirs=s' =>\$directions,
  'config=s' =>\$config_file, 'log=s' => \$log_file, 'login=s' => \$login_file ,'patterns=s',\$patterns_file);
 
 # Reference for use of Log package
@@ -254,51 +255,82 @@ $theTime\n************************************", $verbose);
 if(defined $config_file && $config_file ne "")
 {
 	 $similarity = WebService::UMLSKS::Similarity->new({"config" => $config_file});
-	
+	msg("\n creating  object of similarity with config file", $verbose);
 }
 
 else
 {
-if($sources eq "" && $relations eq "")
-{
-	# use default things
-	msg("\n creating default object of similarity", $verbose);
-	 $similarity = WebService::UMLSKS::Similarity->new();
-}
-else{
+	if($sources eq "" && $relations eq "" && $directions eq "")
+	{
+		# use default things
+		msg("\n creating default object of similarity", $verbose);
+		 $similarity = WebService::UMLSKS::Similarity->new();
+	}
+	else{
+		
+		if( $sources ne "" && $relations ne "" && $directions ne "")
+		{
+			# user specified sources through command line
+			my @source_list = split ("," , $sources);
+			my @relation_list = split ("," , $relations);
+			my @direction_list = split ("," , $directions);
+			 $similarity = WebService::UMLSKS::Similarity->new({"sources" =>  \@source_list,
+														    	 "rels"   =>  \@relation_list,
+														    	 "dirs"   =>  \@direction_list }	);
+			msg("\n creating  object of similarity with sources, rels and dirs", $verbose);
+			#$ConfigurationParameters{"SAB"} = \@sources_list;
+		}
+		else{
+		
+			if($relations ne "" && $directions ne "")
+			{
+				# user specified rels through command line
+				my @relation_list = split ("," , $relations);
+				my @direction_list = split ("," , $directions);
+				 $similarity = WebService::UMLSKS::Similarity->new({ "rels"   =>  \@relation_list,
+				 													 "dirs"   =>  \@direction_list	 });
+				msg("\n creating  object of similarity with  rels and dirs", $verbose);
+				#$ConfigurationParameters{"REL"} = \@relation_list;
+			}
+			
+			if($sources ne "")
+			{
+				my @source_list = split ("," , $sources);
+				
+				 $similarity = WebService::UMLSKS::Similarity->new({"sources" =>  \@source_list}	);
+				 msg("\n creating  object of similarity with sources", $verbose);
+				
+			}
+		}
 
-if(defined $sources && defined $relations)
-{
-	# user specified sources through command line
-	my @source_list = split ("," , $sources);
-	my @relation_list = split ("," , $relations);
-	 $similarity = WebService::UMLSKS::Similarity->new({"sources" =>  \@source_list,
-												    	 "rels"   =>  \@relation_list }	);
-	
-	#$ConfigurationParameters{"SAB"} = \@sources_list;
-}
-elsif(defined $relations )
-{
-	# user specified rels through command line
-	my @relation_list = split ("," , $relations);
-	 $similarity = WebService::UMLSKS::Similarity->new({ "rels"   =>  \@relation_list });
-	
-	#$ConfigurationParameters{"REL"} = \@relation_list;
-}
-elsif(defined $sources)
-{
-	my @source_list = split ("," , $sources);
-	 $similarity = WebService::UMLSKS::Similarity->new({"sources" =>  \@source_list}	);
-	
-}
+	}
 
 }
 
-}
+
+#if(defined $sources && $directions)
+#{
+#	my @source_list = split ("," , $sources);
+#	my @direction_list = split ("," , $directions);
+#	 $similarity = WebService::UMLSKS::Similarity->new({"sources" =>  \@source_list,
+#	 													"dirs"   =>  \@direction_list  }	);
+#	
+#}
+
+#if(defined $sources && defined $relations)
+#{
+#	my @relation_list = split ("," , $relations);
+#	my @source_list = split ("," , $sources);
+#	 $similarity = WebService::UMLSKS::Similarity->new({"sources" =>  \@source_list,
+#												    	 "rels"   =>  \@relation_list});
+#	
+#}
+
 my @sources = @{$similarity->{'SAB'}};
 my @relations = @{$similarity->{'REL'}};
+my @directions = @{$similarity->{'DIR'}};
 
-
+msg("\n sources:@sources rels:@relations and dirs:@directions", $verbose);
 
 # This is used to continue asking for the new term to user unless you enter 'stop'.
 
@@ -517,7 +549,7 @@ while ( $continue == 1 ) {
 			# to get back the CUI.
 			if($isvalid_input1 eq 'term')
 			{
-				my %CUI_ref = %{$get_CUIs->get_CUI_info($service,$term1,\@sources)};
+				my %CUI_ref = %{$get_CUIs->get_CUI_info($service,$term1,\@sources,$verbose)};
 				if(!%CUI_ref)
 				{
 					print "\n Term $term1 does not exist in database.";
@@ -544,7 +576,7 @@ while ( $continue == 1 ) {
 			# to get back the CUI.
 			if($isvalid_input2 eq 'term')
 			{
-				my %CUI_ref = %{$get_CUIs->get_CUI_info($service,$term2,\@sources)};
+				my %CUI_ref = %{$get_CUIs->get_CUI_info($service,$term2,\@sources,$verbose)};
 				if(!%CUI_ref)
 				{
 					print "\n Term $term2 does not exist in database.";
@@ -584,7 +616,7 @@ while ( $continue == 1 ) {
 			# Check if both the inputs are same.
 		
 			msg("\n before calling form grpah : regex: $allowable_pattern_regex", $verbose);
-			my $return_val = $form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,$allowable_pattern_regex);
+			my $return_val = $form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions,$allowable_pattern_regex);
 			if($return_val eq 'same'){
 			next;
 			}			
@@ -610,7 +642,7 @@ while ( $continue == 1 ) {
 						my $t2 = $allCUIOfTerm2[$j];
 						print "\n\nterm 1 : $t1 term 2 : $t2";
 						my $return_val = 
-						$form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations, $allowable_pattern_regex);
+						$form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions, $allowable_pattern_regex);
 						if($return_val eq 'same'){
 							print "\n $t1 and $t2 are same";
 							next;
@@ -628,7 +660,7 @@ while ( $continue == 1 ) {
 				 $t1 = $allCUIOfTerm1[0];
 			 	 $t2 = $allCUIOfTerm2[0];
 			
-				my $return_val = $form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,$allowable_pattern_regex);
+				my $return_val = $form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions,$allowable_pattern_regex);
 				if($return_val eq 'same'){
 					next;
 				}			

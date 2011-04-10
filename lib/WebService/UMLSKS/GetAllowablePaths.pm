@@ -49,6 +49,7 @@ my $verbose = 0;
 my $regex = "";
 
 
+
 =head2 new
 
 This sub creates a new object of GetAllowablePaths
@@ -82,13 +83,13 @@ sub get_shortest_path_info
 	
 	#printHoH($hash_ref);
 	my @possible_paths = @{get_allpaths($hash_ref,$source,$destination)};
-	#msg( "\npossible paths between $source and $destination : @possible_paths", $verbose);
+	msg( "\npossible paths between $source and $destination : @possible_paths", $verbose);
 	if($#possible_paths != -1)
 	{
 		my @allowable_paths =();
 		
 			 @allowable_paths = @{get_allowable_paths( \@possible_paths, $hash_ref, $regex)};
-			#msg( "\n allowable  paths between $source and $destination : @allowable_paths", $verbose);
+			msg( "\n allowable  paths between $source and $destination : @allowable_paths", $verbose);
 		
 		if($#allowable_paths != -1)
 		{
@@ -139,6 +140,7 @@ sub get_allpaths {
 	my $source      = shift;
 	my $destination = shift;
 	my %graph       = %$hash_ref;
+	#printHoH(\%graph);
 
 # FIFO queue used for Breadth First Traversal
 # This queue is a list of list
@@ -208,7 +210,7 @@ sub get_allpaths {
 	}
 	else
 	{
-	#	msg("\n no path exists between source and destination till now", $verbose);
+		msg("\n no path exists between source and destination till now", $verbose);
 		return \@possible_paths;
 	}
 }
@@ -305,9 +307,13 @@ sub get_shortest_path {
 	
 	msg("\n************************************************************", $verbose);
 	msg("\n Finding shortest of all allowed paths:", $verbose);
+	
+	
 	my $length = 100000;
 	my $path_cost = 100000;
 	my $shortest_path_ref;
+	my $change_in_direction = -1;
+	
 	foreach my $path (@allowed_paths) {
 		my @candidate_path = @$path;
 		msg("\n allowed candidate path  : @candidate_path", $verbose);
@@ -320,7 +326,9 @@ sub get_shortest_path {
 #		}
 
 		my $current_path_cost = 0;	
-
+		my $current_direction = 0;
+	    $change_in_direction = -1;
+		
 		for my $i ( 0 .. $#candidate_path - 1 ) {
 			my $first_node = $candidate_path[$i];
 			my $next_node  = $candidate_path[ $i + 1 ];
@@ -334,6 +342,15 @@ sub get_shortest_path {
 			elsif($direction =~ /\b3\b/)
 			{
 				$current_path_cost = $current_path_cost + $scost;
+			}
+			
+			# If current direction is not equal to previous direction, then 
+			# increament the number of chnages in direction in current path.
+			if($current_direction != $direction)
+			{
+				$change_in_direction++;
+				$current_direction = $direction;
+				
 			}
 
 		}
@@ -352,9 +369,11 @@ my @shortest_path_info = ();
 	{
 		msg("\n shortest path : @$shortest_path_ref", $verbose);
 		msg("\n shortest cost : $path_cost", $verbose);
+		msg("\n changes in direction for current shortest path : $change_in_direction", $verbose );
 		
 	push(@shortest_path_info,$shortest_path_ref);
 	push(@shortest_path_info,$path_cost);
+	push(@shortest_path_info, $change_in_direction);
 	
 	return \@shortest_path_info;
 	}
@@ -391,6 +410,23 @@ sub printHoH {
 
 	}
 
+}
+
+
+=head2 printHash
+
+This sub prints argument hash.
+
+=cut
+
+sub printHash
+{
+	my $ref = shift;
+	my %hash = %$ref;
+	foreach my $key(keys %hash)
+	{
+		print "\n $key => $hash{$key}";
+	}
 }
 
 #printHoH(\%ParentInfo);

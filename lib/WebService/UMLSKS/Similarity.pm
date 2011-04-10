@@ -17,7 +17,7 @@ Version 0.04
 
 =cut
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 =head1 SYNOPSIS
 
@@ -41,7 +41,8 @@ our $VERSION = '0.09';
 	The configuaration fie accepted by the module should be in the fillowing format
 	
 	SAB :: include SNOMEDCT,MSH
-	REL :: include PAR,CHD
+	REL :: include PAR
+	DIR :: include U
 	
 	Here, SAB is the sources and REL is relations you want to include in 
 	searching the UMLS. The list of sources and relations can be provided 
@@ -75,9 +76,10 @@ sub new {
 	
 	
 	my @s_array = ("SNOMEDCT");
-	my @r_array = ("PAR","CHD");
+	my @r_array = ("PAR");
+	my @d_array = ("U");
 	
-	my  %ConfigurationParameters = ("SAB" ,\@s_array,"REL",\@r_array);
+	my  %ConfigurationParameters = ("SAB" ,\@s_array,"REL",\@r_array,"DIR",\@d_array);
 	my $self   = \%ConfigurationParameters; 
 	
 	
@@ -122,12 +124,16 @@ sub initialiseParameters {
 	
 	my @source_list;
 	my @relation_list;
+	my @direction_list;
 	if (defined $params->{'sources'})
 	{
 		 @source_list   = @{$params->{'sources'}};
 	}
 	if(defined $params->{'rels'} ){
 		 @relation_list = @{$params->{'rels'}};
+	}
+	if(defined $params->{'dirs'} ){
+		 @direction_list = @{$params->{'dirs'}};
 	}
 	
 		
@@ -201,23 +207,33 @@ sub initialiseParameters {
 		# if no configuration file is specified
 		# if configuration parameters are set using hash as parameter
 		
-		if ( !defined $file_path_name && @source_list && @relation_list ) {
+		if ( !defined $file_path_name && @source_list && @relation_list && @direction_list ) {
 		
 		$self->{"SAB"} = \@source_list;
 		$self->{"REL"} = \@relation_list;
+		$self->{"DIR"} = \@direction_list;
 		}
 		
-		elsif(!@relation_list && @source_list){
-			$self->{"SAB"} = \@source_list;
-		}
-		elsif(@relation_list && !@source_list){
-			$self->{"REL"} = \@relation_list;
-		}
-		elsif(!defined $file_path_name && !@source_list && !@relation_list)
-		{
-			# nothing is specified , then use default values
+		else{
+			
+			if(@source_list){
+				$self->{"SAB"} = \@source_list;
+			}
+			if(@relation_list){
+				$self->{"REL"} = \@relation_list;
+			}
+			if(@direction_list){
+				$self->{"DIR"} = \@direction_list;
+			}
+			
+			
 			
 		}
+		#if(!defined $file_path_name && !@source_list && !@relation_list)
+		#{
+		#	# nothing is specified , then use default values
+			
+		#}
 	}
 	
 	

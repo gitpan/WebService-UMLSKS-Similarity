@@ -9,7 +9,7 @@ lib/WebService/UMLSKS/ConnectUMLS.pm
 lib/WebService/UMLSKS/DisplayInfo.pm
 lib/WebService/UMLSKS/GetAllowablePaths.pm
 lib/WebService/UMLSKS/GetCUIs.pm
-lib/WebService/UMLSKS/GetParents.pm
+lib/WebService/UMLSKS/GetNeighbors.pm
 lib/WebService/UMLSKS/GetUserData.pm
 lib/WebService/UMLSKS/MakeGraph.pm
 lib/WebService/UMLSKS/Query.pm

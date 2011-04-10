@@ -44,6 +44,9 @@ use WebService::UMLSKS::Similarity;
 
 package WebService::UMLSKS::GetCUIs;
 
+
+use Log::Message::Simple qw[msg error debug];
+
 my $got_term = 0;
 my $term = "";
 my $cui = "";
@@ -57,7 +60,7 @@ my %TermCUI = ();
 # Creating Connect object to call sub get_pt while forming a query.
 
 my $c = WebService::UMLSKS::ConnectUMLS->new;
-
+my $verbose;
 
 =head2 new
 
@@ -84,11 +87,14 @@ sub get_CUI_info
 	my $service = shift;
 	my $query_term = shift;
 	my $s_ref = shift;
+	my $ver = shift;
+	
+	$verbose = $ver;
 	%TermCUI = ();	
 	
 	my @sources = @$s_ref;
 	
-	
+	msg("\n In getCUIs sources are : @sources", $verbose);
 	# query
 	$service->readable(1);
 	my $ws_result_ref = run_query($service,
@@ -184,7 +190,7 @@ This sub formats scalar object.
 
 sub format_scalar {
 	my $scalar_ref = shift;
-	my $q = shift;
+	#my $q = shift;
 	
 	#print "\n In format scalar";
 	#print "\n scalar_ref is $$scalar_ref";

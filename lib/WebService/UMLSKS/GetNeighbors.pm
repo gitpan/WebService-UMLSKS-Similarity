@@ -37,15 +37,28 @@ The subroutines are as follows:
 use SOAP::Lite;
 use strict;
 use warnings;
+
 no warnings qw/redefine/;
 
-package WebService::UMLSKS::GetParents;
+
+package WebService::UMLSKS::GetNeighbors;
 our $ConceptInfo_ref;
-
+use Log::Message::Simple qw[msg error debug];
 my %ConceptInfo;
+my %directions;
 my @parents;
+my @children;
+my @siblings;
 my $indentation;
+my $verbose = 0;
 
+#print "\n in format hash";
+	#my %directions =  %$WebService::UMLSKS::MakeGraph::Directions_ref;
+	
+	#$directions{"PAR"} = "U";
+	#$directions{"CHD"} = "D";
+	#$directions{"RB"} = "H";
+	#$directions{"RN"} = "H";
 
 =head2 new
 
@@ -74,13 +87,73 @@ sub read_object {
 	my $self        = shift;
 	my $object_refr = shift;
 	my $qterm = shift;
+	my $ver = shift;
+	my $directions_ref = shift;
+	$verbose = $ver;
+	
+	 %directions = %$directions_ref;
+	 printHash(\%directions);
 	@parents = ();
+	@children = ();
+	@siblings = ();
+	
+	my @neighbors = ();
+	
 	#my $return_ref =
 	format_object($object_refr);
 	chomp(@parents);
+	chomp(@children);
+	chomp(@siblings);
 
 	$ConceptInfo_ref = \%ConceptInfo;
 
+	my $parents_ref = findUnique(\@parents,$qterm);
+	my $children_ref = findUnique(\@children,$qterm);
+	my $siblings_ref = findUnique(\@siblings,$qterm);
+	
+	if(defined $parents_ref){
+		#print "\n parents are @unique";
+		push(@neighbors,$parents_ref);
+	}
+	else{
+		#msg( "\n No parents found for $qterm in current Source/s", $verbose);
+		push(@neighbors,"empty");
+	}
+	if(defined $children_ref){
+		#print "\n parents are @unique";
+		push(@neighbors,$children_ref);
+	}
+	else{
+		#msg( "\n No children found for $qterm in current Source/s", $verbose);
+		push(@neighbors,"empty");
+	}
+	if(defined $siblings_ref){
+		#print "\n parents are @unique";
+		push(@neighbors,$siblings_ref);
+	}
+	else{
+		#msg( "\n No siblings found for $qterm in current Source/s", $verbose);
+		push(@neighbors,"empty");
+	}
+	
+	return \@neighbors;
+	
+}
+
+
+=head2 findUnique
+
+This sub finds unique elements in an array.
+
+=cut
+
+sub findUnique
+{
+
+my $array_ref = shift;
+my $qterm = shift;	
+my @array = @$array_ref;
+	
 # The following code snippet to delete duplicate elements from an array is referred from
 # perfaq4 and is modified according to need. For details refer :
 # http://perldoc.perl.org/perlfaq4.html#How-can-I-remove-duplicate-elements-from-a-list-or-array%3f
@@ -91,7 +164,7 @@ sub read_object {
 
 	my @unique = ();
 	my %seen   = ();
-	foreach my $elem (@parents) {
+	foreach my $elem (@array) {
 		if ( $seen{$elem}++) {
 
 		}
@@ -107,19 +180,9 @@ sub read_object {
 
 	# Code snippet from perlfaq4 ends here.
 	
-	my $parents_ref = \@unique;
-	if(defined $parents_ref && $#unique != -1){
-		#print "\n parents are @unique";
-		return $parents_ref;		
-	}
-	else{
-		#msg( "\n No parents found for $qterm in current Source/s", $verbose);
-		return 'empty';
-	}
+	return \@unique;
 	
 }
-
-
 
 # This sub formats the structures returned by the web service. It calls
 # the appropriate subroutines depending on the type of structure
@@ -164,39 +227,24 @@ sub format_object {
 }
 
 
-=head2 indent
-
-This sub is used for indentation.
-
-=cut
-
-sub indent {
-
-	#print "\n";
-	my $number = shift;
-	my $i;
-	for ( $i = 0 ; $i < $number ; $i++ ) {
-	#	print " *i ";
-	}
-
-}
-
-
 =head2 format_scalar
 
 This sub formats scalar object.
 
 =cut
 
+
 sub format_scalar {
-
 	my $scalar_ref = shift;
-
-	#print "in format_scalar";
-	print "*s".$$scalar_ref;
-	return format_object($$scalar_ref);
-
+	#my $q = shift;
+	
+	#print "\n In format scalar";
+	#print "\n scalar_ref is $$scalar_ref";
+	format_object($$scalar_ref);
+	
 }
+
+
 
 =head2 format_homogeneous_hash
 
@@ -205,12 +253,9 @@ This sub formats hash.
 =cut
 
 sub format_homogeneous_hash {
-	#$indentation++;
+	
 	my $hash_ref = shift;
-
-	#print "in format_hash";
 	my @incl_rows = ();
-
 	my $flag   = 0;
 	my $flag2  = 0;
 	my $t_flag = 0;
@@ -219,91 +264,77 @@ sub format_homogeneous_hash {
 	my $current_cui;
 	my $q_cui;
 	my $q_term;
-
-	#print "\n";
-	#indent($indentation);
-
-	#print "hash{";
-	foreach my $att ( keys %$hash_ref ) {
-
-
-  # Follwing regular expression is used to display just the required information
-  # and discard the unnecessary information returned by the UMLSKS.
-		if (
-			$att =~
-/\brelease\b|\bkey\b|\bempty\b|\bperformance\b|\bRAs\b|\bCAs\b|\bSTYs\b|\bdefs\b|\bterms\b|\bSGs\b|
-\bSAB\b|\btype\b|\bCOCs\b|\bCXTs\b|\bcontentClass\b|\bSATUI\b|\bDefinition\b|\bAUI\b|\bATUI\b|\brelSources\b|
-\bRelation\b|\bSL\b|\bqueryInput\b|\bConcept\b|\bcontents\b/
-		  )
-		{
-			
-			#print nothing
-			
-		}	
-		
-		else {
-
-# Check for rel key in hash to select the needed part in relation hash.
-			if ( $att =~ /rel/) {
-				#if(defined $hash_ref->{$att})
-				#{
-				#	if($hash_ref->{$att} =~/\bPAR\b/){
-				#		print "\n got relation $att : $hash_ref->{$att}";
+	my $relation;
+	
+	
+	
+	
+	foreach my $att (keys %$hash_ref) {		
+		if ( $att =~ /\brel\b/) {
+				if(defined $hash_ref->{$att})
+				{
+					if($hash_ref->{$att} ~~ %directions){
+						msg( "\n got relation $att : $hash_ref->{$att}", $verbose);
 						$flag = 1;
-				#	}
-					
-			#	}
-
-				
-
-				
-
-			}
-
-			if ( $flag == 1 ) {
-
-				if ( $att =~ /rel|RUI|type|autoGen|SRUI|directionality|relA/ ) {
-
-					#do nothing
-				
-				}
-
-				else {
-					if ( $att =~ /CN/ ) {
+						$relation = $hash_ref->{$att};
 						
-				#print " \n got term , $att : $hash_ref->{$att}";
-						$current_term = $hash_ref->{$att};
-						$t_flag       = 1;
-
 					}
-					else {
-						if ( $t_flag == 1 ) {
-
-			 				# checking if att is a valid CUI
-			 				if($hash_ref->{$att} =~ /^C/)
-			 				{
+					else{
+						$flag = 0;
+					}
+					
+					
+				}
+		}
+		if ( $flag == 1 ) {
+			if($att =~ /CN/){
+				#print " \n got term , $att : $hash_ref->{$att}";
+				$current_term = $hash_ref->{$att};
+				$t_flag       = 1;
+				
+			}
+			else{
+				if($t_flag == 1){
+					if(defined $hash_ref->{$att}){
+					if($hash_ref->{$att} =~ /^C/){
+							
 							$current_cui = $hash_ref->{$att};
 							if(defined $current_cui){ #c 1
-							unless ($current_cui ~~ %ConceptInfo){
+								unless ($current_cui ~~ %ConceptInfo){
+									
+									#print " \n inserting in hash $current_cui : $current_term";
+									$ConceptInfo{$current_cui} = $current_term;
+								}
 								
-							#print " \n inserting in hash $current_cui : $current_term";
-							$ConceptInfo{$current_cui} = $current_term;
+								# Push all the respective neighbors in the the lists 
+									if($directions{$relation} eq "U")
+									{
+										push(@parents, $current_cui);
+										msg( " \n inserting in parent , relation is $relation $current_cui : $current_term",$verbose);
+										#print " \n inserting in parents $current_cui : $current_term";
+									}
+									elsif($directions{$relation} eq "D")
+									{
+										push(@children, $current_cui);
+									msg( " \n inserting in children , relation is $relation $current_cui : $current_term",$verbose);
+										
+									}
+									elsif($directions{$relation} eq "H")
+									{
+										push(@siblings, $current_cui);
+										#print " \n inserting in siblings $current_cui : $current_term";
+										
+									}
+								
 							}
-							}
-							}
-
-							
-						}
-						
-						push( @parents, $hash_ref->{$att} );
 					}
-
+					}
+		
 				}
-
 			}
 		}
-			
-			if ( $att =~ /CN/ ) {				
+		
+		if ( $att =~ /CN/ ) {				
 					
 					$q_term = $hash_ref->{$att};
 					#print "\n got xtra term : $q_term";
@@ -319,22 +350,28 @@ sub format_homogeneous_hash {
 						
 					}
 				}
-				
-
-						
 		
-
-	  #Follwing regular expression is used to get just the required information.
+		#Follwing regular expression is used to get just the required information.
 		if ( $att =~ /contents|CUI|Concept|rels|Relation|relSources/ ) {
 
-			push @incl_rows, $att, format_object( $hash_ref->{$att} );
+			format_object($hash_ref->{$att});	
 
-		}
+		}	
+		#format_object($hash_ref->{$att});		
 	}
 
-	return @incl_rows;
-
 }
+
+
+
+
+
+
+
+
+
+
+
 
 =head2 format_homogeneous_array
 
@@ -343,28 +380,19 @@ This sub formats array.
 =cut
 
 sub format_homogeneous_array {
-	#$indentation++;
 	my $array_ref = shift;
-
-	#print "in format_array";
-	my @incl_rows = ();
-
-	#indent($indentation);
-
-	foreach my $val (@$array_ref) {#c2
-
-		push @incl_rows, format_object($val);
-
-	}
-
-	@incl_rows = ('no values') unless @incl_rows;
-
-	return @incl_rows;
+	#print "\n in format array";
+	foreach my $val (@$array_ref) {
+	format_object($val);							   
+	}	
 }
+
+
+
 
 =head2 extract_object_class
 
-This sub removes exact reference of object.
+This sub is used to remove exact reference to object.
 
 =cut
 
@@ -374,18 +402,37 @@ sub extract_object_class {
 	# remove exact reference
 	$object_ref =~ s/\(0x[\d\w]+\)$//o;
 
-	my ( $class, $type ) = split /=/, $object_ref;
+	my ($class, $type) = split /=/, $object_ref;
 
 	my $res = undef;
 	if ($type) {
 		$res = $class;
-	}
-	else {
+	} else {
 		$res = $object_ref;
 	}
 
 	return $res;
 }
+
+=head2 printHash
+
+This sub prints argument hash.
+
+=cut
+
+sub printHash
+{
+	msg("\nIn print hash", $verbose);
+	my $ref = shift;
+	my %hash = %$ref;
+	foreach my $key(keys %hash)
+	{
+		msg( "\n $key => $hash{$key}",$verbose);
+	}
+}
+
+
+
 
 #-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
 

@@ -87,7 +87,6 @@ sub runQuery {
 	#warn sprintf "----> %s(%s)\n", $method_name, join(', ', @params);
 
 	# Calling the UMLSKS Web service and receiving the hash reference.
-
 	my $object_ref = $service->$method_name(@params);
 	
 	
