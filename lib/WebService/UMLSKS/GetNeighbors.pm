@@ -1,18 +1,18 @@
 
 =head1 NAME
 
-WebService::UMLSKS::GetParents - Fetches all the parent concepts for the input concept.
+WebService::UMLSKS::GetNeighbors - Fetches all the neighbor concepts for the input concept.
 
 =head1 SYNOPSIS
 
 =head2 Basic Usage
 
-    use WebService::UMLSKS::GetParents;
+    use WebService::UMLSKS::GetNeighbors;
     
-    my $parents_ref = call_getconceptproperties($cui);# parents_ref is a hash reference
-    my $read_parents = new GetParents;
-    # $ref is a reference of an array of all parents' CUI for the input cui.
-    my $ref  = $read_parents->read_object( $parents_ref );   
+    my $Neighbors_ref = call_getconceptproperties($cui);# Neighbors_ref is a hash reference
+    my $read_Neighbors = new GetNeighbors;
+    # $ref is a reference of an array of all Neighbors' CUI for the input cui.
+    my $ref  = $read_Neighbors->read_object( $Neighbors_ref );   
 	   
 
 
@@ -62,7 +62,7 @@ my $verbose = 0;
 
 =head2 new
 
-This sub creates a new object of GetParents.
+This sub creates a new object of GetNeighbors.
 
 =cut
 
@@ -78,7 +78,7 @@ sub new {
 =head2 read_object
 
 This sub reads hash reference object passed to this
-sub and fetches the required parents' information.
+sub and fetches the required Neighbors' information.
 
 =cut
 
@@ -436,7 +436,6 @@ sub printHash
 
 #-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
 
-## =back spurious back removed by tdp
 
 
 =head1 SEE ALSO

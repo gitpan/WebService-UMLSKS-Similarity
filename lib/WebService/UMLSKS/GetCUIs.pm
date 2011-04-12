@@ -8,19 +8,16 @@ WebService::UMLSKS::GetCUIs - Get all the preferred terms and CUIs of the input 
 =head2 Basic Usage
 
     use WebService::UMLSKS::GetCUIs;
-    use WebService::UMLSKS::Query;
+    use WebService::UMLSKS::ConnectUMLS;
     
-    my $getCUIs_obj =  new GetCUIs;
-    my $query = new Query;
-    
-    my $object_ref = $query->runQuery($service, $qterm,	'getConceptProperties', {params});
-    # object_ref is a hash reference returned by web service getConceptProperties.
-    my $CUIs_ref = $getCUIs_obj->get_CUI_info($object_ref); 
+    my $getCUIs_obj =  new GetCUIs; 
+  
+    my $CUIs_ref = $getCUIs_obj->get_CUI_info($service,$term,\@sources,$verbose); 
    
 
 =head1 DESCRIPTION
 
-This module has package GetCUIs which has subroutines 'new', format _object, format_scalar, format_homogenous_hash, format_homogenous_array and extract_object_class.
+This module has package GetCUIs which has subroutines 'new',get_CUI_info, format _object, format_scalar, format_homogenous_hash, format_homogenous_array and extract_object_class.
 This module returns the hash of all preferred terms and CUIs for the input Term.
 
 =head1 SUBROUTINES

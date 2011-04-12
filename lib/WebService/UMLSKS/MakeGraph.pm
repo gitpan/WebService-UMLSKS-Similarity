@@ -50,7 +50,7 @@ use Log::Message::Simple qw[msg error debug];
 my %node_cost = ();
 my %Graph     = ();
 
-my $const_C = 100;
+my $const_C = 10;
 my $const_k = 1;
 
 my %MetaCUIs = (
@@ -435,7 +435,7 @@ sub form_graph
 		my %Concept = %$WebService::UMLSKS::GetNeighbors::ConceptInfo_ref;
 
 		my $semantic_relatedness =
-		  $const_C - $final_cost - $const_k * $change_in_direction;
+		  $const_C - ($final_cost/10) - $const_k * $change_in_direction;
 
 		print "\n Final shortest path :";
 		foreach my $n (@current_shortest_path) {

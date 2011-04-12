@@ -17,7 +17,7 @@ ws-getShortestPath
 
 =pod
 
-perl ws-getShortestPath.pl --verbose 1 -sources SNOMEDCT,MSH --rels PAR,CHD --config configfilename --login loginfile --patterns patternsfile
+perl ws-getShortestPath.pl --verbose 1 -sources SNOMEDCT,MSH --rels PAR --dirs U --config configfilename --login loginfile --patterns patternsfile 
 
 --verbose: Sets verbose flag to true if value is set to 1, and thus displays all the authentication information for the user.
 
@@ -27,7 +27,12 @@ by comma. These sources will be used to query and retrieve the information.
 --rels :  UMLS relations can be specified by providing list of relations seperated
 by comma. These relations will be used to query and retrieve the information.
 
---config : Instead of providing sources and relations on command line, they can be
+--dirs :  Directions for UMLS relations can be specified by providing list of directions seperated
+by comma. Different directions are U - Up , D - Down and H - Horizontal.
+These directions will be used to find the allowable path. The sequence of these directions 
+should be same as the sequence of relations provided by the --rels option.
+
+--config : Instead of providing sources, relations and directions on command line, they can be
 specified using a configuration file, which can be provided with this option.
 It takes complete path and name of the file. The config file is expected in following format:
 
@@ -40,6 +45,8 @@ It takes complete path and name of the file. The config file is expected in foll
 =item SAB :: SNOMEDCT,MSH
 
 =item REL :: PAR
+
+=item DIR :: U
  
 =back 
 
@@ -92,7 +99,7 @@ Follwing is a sample output
 
 =item UMLS Source(s) used: SNOMED-CT
 
-=item UMLS Relation(s) used: PAR/CHD
+=item UMLS Relation(s) used: PAR
 
 =item Source is : C0229962, Destination is: C1623497
 
@@ -125,12 +132,12 @@ This program uses following packages:
 
 =over
  
-=item package GetParents
+=item package GetNeighbors
 
-sub GetParents::read_object which reads hash reference object passed to this
-sub and fetches the required parents' information.
+sub GetNeighbors::read_object which reads hash reference object passed to this
+sub and fetches the required Neighbors' information.
 
-sub GetParents::format_object calls appropriate functions like format_homogenous_hash,
+sub GetNeighbors::format_object calls appropriate functions like format_homogenous_hash,
 format_scalar, format_homogenous_array depending on the object reference it is called with.
 format_homogenous_hash,format_scalar and format_homogenous_array are subroutines which 
 read the objects they are called with and fetch the desired information.
@@ -156,10 +163,10 @@ sub GetUserData::getUserDetails to get username and password from the user.
 sub Query::runQuery which takes method name, service and other parameters as argument and calls the web service. 
 It also displays the information received from the web service and other error messages. 
 
-=item package FindPaths
+=item package MakeGraph
 
-sub FindPaths::find_paths which uses a Graph module from CPAN and creates a graph
-using the concepts and their parent concepts. It finds shortest path between two
+sub MakeGraph::form_graph forms graph using standard BFS algorithm and creates a graph
+using the concepts and their neighbor concepts. It finds shortest path between two
 input concepts and displays the path. 
 
 =back
@@ -202,13 +209,8 @@ no warnings qw/redefine/;
 # Reference:         Program provided by Olivier B., NLM.
 
 
-# This is a verbose variable which is set using the command line argument.
-# This is set to true if you use --verbose option.
-# This is set to false if you use --noverbose option.
 
 my $verbose = '';
-#GetOptions( 'verbose!' => \$verbose );
-
 my $log_file = '';
 my $patterns_file = '';
 my $sources = '';
@@ -218,7 +220,7 @@ my $similarity;
 my $config_file = '';
 my $login_file = '';
 
-#GetOptions( 'verbose!' => \$verbose );
+
 
 GetOptions( 'verbose:i' => \$verbose , 'sources=s' => \$sources , 'rels=s' =>\$relations, 'dirs=s' =>\$directions,
  'config=s' =>\$config_file, 'log=s' => \$log_file, 'login=s' => \$login_file ,'patterns=s',\$patterns_file);
@@ -473,7 +475,7 @@ my $c = WebService::UMLSKS::ConnectUMLS->new;
 
 # Creating GetParents object to get back the parents of input terms.
 
-my $read_parents = WebService::UMLSKS::GetParents->new;
+#my $read_parents = WebService::UMLSKS::GetParents->new;
 
 # Creating  GetCUIs object to get back CUIs related to terms.
 
