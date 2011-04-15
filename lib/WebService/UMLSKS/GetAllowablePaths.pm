@@ -50,6 +50,7 @@ my $regex = "";
 
 
 
+
 =head2 new
 
 This sub creates a new object of GetAllowablePaths
@@ -82,9 +83,10 @@ sub get_shortest_path_info
 	$verbose = $ver;
 	
 	#printHoH($hash_ref);
+	if(get_allpaths($hash_ref,$source,$destination) != -1){
 	my @possible_paths = @{get_allpaths($hash_ref,$source,$destination)};
 	msg( "\npossible paths between $source and $destination : @possible_paths", $verbose);
-	if($#possible_paths != -1)
+	if($#possible_paths != -1 )
 	{
 		my @allowable_paths =();
 		
@@ -106,7 +108,11 @@ sub get_shortest_path_info
 		}
 		else
 		{
-		return -1;
+			
+			
+				return -1;
+			
+			
 		}
 	}
 	else
@@ -115,7 +121,14 @@ sub get_shortest_path_info
 	}
 	
 	
-
+	}
+	else
+{
+	
+				# If there is no meaningful path between resources and path distance has crossed th ethreshold
+				# then return -2;
+				return -2;
+}
 		
 	
 }
@@ -202,6 +215,10 @@ sub get_allpaths {
 	msg("\n All possible paths between $source and $destination are:", $verbose);
 	foreach my $i ( 0 .. $#possible_paths ) {
 		my @path = @{ $possible_paths[$i] };
+		if($#path >= 30)
+		{
+			return -1;
+		}
 		msg("\npath $i is : @path", $verbose);
 	}
 

@@ -110,7 +110,16 @@ sub form_graph
 	my $r_ref   = shift;
 	my $d_ref   = shift;
 	my $regex   = shift;
+	my $test_flag = shift;
 
+
+	# If this is a testing mode, then create an output file
+	if($test_flag == 1)
+		{
+		open(OUTPUT,">>","output.txt") or die("Error: cannot open file 'output.txt'\n");
+		
+		}	
+		
 	$verbose = $ver;
 	
 	# Set up the directions hash using the directions and relations arrays
@@ -218,6 +227,8 @@ sub form_graph
 		if ( defined $neighbors_info_ref && @$neighbors_info_ref ) {
 			if ( $counter == 2 ) {
 				if ( $term1 eq $term2 ) {
+					
+					print OUTPUT "10<>$term1<>$term2\n";
 					print
 "\n Both the input terms share extra strong relation as they are same";
 					msg(
@@ -415,11 +426,22 @@ sub form_graph
 		my $get_path_info_result =
 		  $get_paths->get_shortest_path_info( \%subgraph, $term1, $term2,
 			$verbose, $regex );
-		if ( $get_path_info_result != -1 ) {
+		if ( $get_path_info_result != -1 && $get_path_info_result != -2 ) {
 			my @path_info = @$get_path_info_result;
 			@current_shortest_path  = @{ shift(@path_info) };
 			$current_available_cost = shift(@path_info);
 			$change_in_direction    = shift(@path_info);
+		}
+		if($get_path_info_result == -2)
+		{
+			# Stop seraching for shortest path as the path length has already increased
+			# the threshold value.
+			print OUTPUT "0<>$term1<>$term2\n";
+			print "\n Stopped searching as the path length exceeds the threshold value";
+			
+			last;
+			
+			
 		}
 
 		$final_cost = $current_available_cost;
@@ -430,6 +452,7 @@ sub form_graph
 
 	}
 
+	
 	if (@current_shortest_path) {
 		
 		my %Concept = %$WebService::UMLSKS::GetNeighbors::ConceptInfo_ref;
@@ -452,17 +475,29 @@ sub form_graph
 
 		print "\n Semantic relatedness : $semantic_relatedness";
 		msg( "\n Semantic relatednes : $semantic_relatedness", $verbose );
+		if($test_flag == 1)
+		{
+			print OUTPUT "$semantic_relatedness<>$term1<>$term2\n";
+		}
+		
+		
 
 	}
 	else
 
 	{
-		print "\n No shortest path found between the input terms/CUIs\n";
+		if($test_flag == 1)
+		{
+			print OUTPUT "0<>$term1<>$term2\n";
+		}
+		print "\n No shortest allowable path found between the input terms/CUIs\n";
 	}
 
 	#print "\n the parents are @parents";
 	#print "\n siblings are @sib";
-
+if($test_flag == 1){
+	close OUTPUT;
+}
 
 	
 }

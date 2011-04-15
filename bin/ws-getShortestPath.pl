@@ -17,7 +17,7 @@ ws-getShortestPath
 
 =pod
 
-perl ws-getShortestPath.pl --verbose 1 -sources SNOMEDCT,MSH --rels PAR --dirs U --config configfilename --login loginfile --patterns patternsfile 
+perl ws-getShortestPath.pl --verbose 1 -sources SNOMEDCT,MSH --rels PAR --dirs U --config configfilename --login loginfile --patterns patternsfile --testfile test_file
 
 --verbose: Sets verbose flag to true if value is set to 1, and thus displays all the authentication information for the user.
 
@@ -219,11 +219,12 @@ my $directions = '';
 my $similarity;
 my $config_file = '';
 my $login_file = '';
+my $test_file = '';
 
 
 
 GetOptions( 'verbose:i' => \$verbose , 'sources=s' => \$sources , 'rels=s' =>\$relations, 'dirs=s' =>\$directions,
- 'config=s' =>\$config_file, 'log=s' => \$log_file, 'login=s' => \$login_file ,'patterns=s',\$patterns_file);
+ 'config=s' =>\$config_file, 'log=s' => \$log_file, 'login=s' => \$login_file ,'patterns=s' => \$patterns_file, 'testfile=s' => \$test_file,);
 
 # Reference for use of Log package
 # http://perldoc.perl.org/Log/Message/Simple.html#msg(%22message-string%22-%5b%2cVERBOSE%5d)
@@ -331,12 +332,49 @@ else
 my @sources = @{$similarity->{'SAB'}};
 my @relations = @{$similarity->{'REL'}};
 my @directions = @{$similarity->{'DIR'}};
+my $test_flag = 0;
+
+my %input = ();
+my @querylist1 = ();
+my @querylist2 = ();
 
 msg("\n sources:@sources rels:@relations and dirs:@directions", $verbose);
+
+# If this is a testing mode, then setr continue to length of the file i.e. number of rows
+
+if($test_file ne ""){
+	
+	open(MYDATA, $test_file) or  die("Error: cannot open file 'data.txt'\n");
+	
+	
+	# This is creating the file for writing output
+	open(OUT,">","output.txt") or die("Error: cannot open file 'output.txt'\n");
+	close OUT;	
+	my $line;
+	$test_flag = 1;
+	my $lnum = 1;
+	while( $line = <MYDATA> ){
+	  	chomp($line);
+	  	#print "$lnum: $line\n";
+	  	
+	  	$line =~ /\s*(.*)\s*<>\s*(.*?)$/;
+	  	my $query1 = $1;
+	  	my $query2 = $2;
+	  	$query1 =~ s/\s*//g;
+	  	$query2 =~ s/\s*//g;
+	  msg ( "\nquery1 : $query1, query2: $query2", $verbose);
+	  	push(@querylist1, $query1);
+	  	push(@querylist2, $query2);
+	  	#$input{$query1} = $query2;
+	  	$lnum++;
+	}	
+	
+}
 
 # This is used to continue asking for the new term to user unless you enter 'stop'.
 
 my $continue = 1;
+
 my $object_ref;
 
 # Declaring hash ParentInfo to store parent CUIs' information in following format:
@@ -487,11 +525,36 @@ my $form_graph = WebService::UMLSKS::MakeGraph->new;
 
 my $proxy_ticket = $c->get_pt();
 
-while ( $continue == 1 ) {
+my $currenttest = 0;
 
+while ( $continue == 1 ) {
+	
+	my $term1;
+	my $term2;
+	if($test_flag == 1){
+		#print "\n$querylist1[0]";
+		#print "\n$querylist2[0]";
+		$term1 = "";
+		$term2 = "";
+		$term1 = $querylist1[$currenttest];
+		$term2 = $querylist2[$currenttest];
+		$currenttest++;
+		if(!$term1)
+		{
+			print "\nend of test";
+			$continue = 0;
+			next;
+			
+		}
+		msg("term1: $term1 , term2 :$term2 ", $verbose);
+		
+	}
+	
+
+	if($test_flag == 0){
 	# After the authentication, accept a first query term or CUI from the user.
 	print "\nEnter first query CUI:";
-	my $term1 = <>;
+	 $term1 = <>;
 
 	# Remove white spaces.
 	chomp($term1);
@@ -502,20 +565,21 @@ while ( $continue == 1 ) {
 	}
 
 	# Else continue with asking the new query term.
-	else {
+	
 
 	# After the authentication, accept a first query term or CUI from the user.
 
 	print "\nEnter second query CUI:";
-	my $term2 = <>;
+	 $term2 = <>;
 
 	# Remove white spaces.
 	chomp($term2);
 
-	if ( $term1 =~ /stop/i ) {
+	if ( $term2 =~ /stop/i ) {
 		exit;
 	}
-
+	}
+	
 
 	# Validate the term by passing it to the sub validateTerm which belongs to class getTerm.
 	# Create object of class getTerm to access the sub validateTerm.
@@ -618,7 +682,8 @@ while ( $continue == 1 ) {
 			# Check if both the inputs are same.
 		
 			msg("\n before calling form grpah : regex: $allowable_pattern_regex", $verbose);
-			my $return_val = $form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions,$allowable_pattern_regex);
+			my $return_val = $form_graph->
+			form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions,$allowable_pattern_regex,$test_flag);
 			if($return_val eq 'same'){
 			next;
 			}			
@@ -644,7 +709,7 @@ while ( $continue == 1 ) {
 						my $t2 = $allCUIOfTerm2[$j];
 						print "\n\nterm 1 : $t1 term 2 : $t2";
 						my $return_val = 
-						$form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions, $allowable_pattern_regex);
+						$form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions, $allowable_pattern_regex,$test_flag);
 						if($return_val eq 'same'){
 							print "\n $t1 and $t2 are same";
 							next;
@@ -662,7 +727,8 @@ while ( $continue == 1 ) {
 				 $t1 = $allCUIOfTerm1[0];
 			 	 $t2 = $allCUIOfTerm2[0];
 			
-				my $return_val = $form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions,$allowable_pattern_regex);
+				my $return_val = $form_graph->
+				form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions,$allowable_pattern_regex,$test_flag);
 				if($return_val eq 'same'){
 					next;
 				}			
@@ -673,7 +739,7 @@ while ( $continue == 1 ) {
 
 
 
-	}
+	
 	
 }
 
