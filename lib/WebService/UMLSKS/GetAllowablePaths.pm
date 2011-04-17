@@ -213,12 +213,27 @@ sub get_allpaths {
 	{
 	msg("\n************************************************************", $verbose);
 	msg("\n All possible paths between $source and $destination are:", $verbose);
+	
+	my $stop_flag = 0;
+	
+	
+	# If all possible paths exceed above threshold then stop searching
 	foreach my $i ( 0 .. $#possible_paths ) {
 		my @path = @{ $possible_paths[$i] };
-		if($#path >= 30)
-		{
-			return -1;
+		if($#path < 25){
+			$stop_flag = 1; 
 		}
+		
+	}
+	if($stop_flag == 0)
+	{
+		return -1;
+	}
+	
+	
+	foreach my $i ( 0 .. $#possible_paths ) {
+		my @path = @{ $possible_paths[$i] };
+		
 		msg("\npath $i is : @path", $verbose);
 	}
 
@@ -325,11 +340,12 @@ sub get_shortest_path {
 	msg("\n************************************************************", $verbose);
 	msg("\n Finding shortest of all allowed paths:", $verbose);
 	
-	
+	my @path_string = ();
 	my $length = 100000;
 	my $path_cost = 100000;
 	my $shortest_path_ref;
 	my $change_in_direction = -1;
+	my $shortest_path_direction;
 	
 	foreach my $path (@allowed_paths) {
 		my @candidate_path = @$path;
@@ -345,11 +361,33 @@ sub get_shortest_path {
 		my $current_path_cost = 0;	
 		my $current_direction = 0;
 	    $change_in_direction = -1;
-		
+		 @path_string = ();
+		my $arrow_direction = "";
+				
 		for my $i ( 0 .. $#candidate_path - 1 ) {
 			my $first_node = $candidate_path[$i];
 			my $next_node  = $candidate_path[ $i + 1 ];
 			my $direction  = $graph{$first_node}{$next_node};
+			if($direction == 1)
+			{
+				
+				$arrow_direction = "U"; 
+				
+			}
+			if($direction == 2)
+			{
+				
+				$arrow_direction = "D"; 
+				
+			}
+			if($direction == 3)
+			{
+				
+				$arrow_direction = "H"; 
+				
+			}
+			push(@path_string, $arrow_direction);
+			
 			# If a parent or child relation then add the parent cost
 			if($direction =~ /\b1\b|\b2\b/)
 			{
@@ -377,22 +415,24 @@ sub get_shortest_path {
 		{
 			$path_cost = $current_path_cost;
 			$shortest_path_ref = \@candidate_path;
+			#$shortest_path_direction = \@path_string;
 		}
 
 
 	}
-my @shortest_path_info = ();
+	my @shortest_path_info = ();
 	if(defined $shortest_path_ref)
 	{
 		msg("\n shortest path : @$shortest_path_ref", $verbose);
 		msg("\n shortest cost : $path_cost", $verbose);
 		msg("\n changes in direction for current shortest path : $change_in_direction", $verbose );
+		msg("\n shortest path direction path string : @path_string", $verbose);
+		push(@shortest_path_info,$shortest_path_ref);
+		push(@shortest_path_info,$path_cost);
+		push(@shortest_path_info, $change_in_direction);
+		push(@shortest_path_info, \@path_string);
 		
-	push(@shortest_path_info,$shortest_path_ref);
-	push(@shortest_path_info,$path_cost);
-	push(@shortest_path_info, $change_in_direction);
-	
-	return \@shortest_path_info;
+		return \@shortest_path_info;
 	}
 	else
 	{

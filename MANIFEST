@@ -1,4 +1,4 @@
-bin/ws-getShortestPath.pl
+bin/ws-getAllowablePath.pl
 bin/ws-getUMLSInfo.pl
 bin/ws-sample.pl
 Changes

@@ -106,7 +106,7 @@ sub connect_umls {
 	# If proxy granting ticket is not defined dispalying the error message.
 
 	if ( not defined $pgt ) {
-		print "You entered wrong username or password";
+		print "\nYou entered wrong username or password\n";
 		return 0;
 	}
 

@@ -1,3 +1,2 @@
 SAB :: include SNOMEDCT
-REL :: include PAR,RN
-DIR :: include U,H
+REL :: include PAR

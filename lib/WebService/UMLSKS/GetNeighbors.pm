@@ -432,6 +432,11 @@ sub printHash
 }
 
 
+undef %ConceptInfo;
+undef %directions;
+undef @children;
+undef @parents;
+undef @siblings;
 
 
 #-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------

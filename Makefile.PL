@@ -15,7 +15,7 @@ WriteMakefile(
         'Test::More' => 0,
 	'Crypt::SSLeay' => 0,
     },
-    EXE_FILES           => [("bin/ws-getUMLSInfo.pl", "bin/ws-getShortestPath.pl", "bin/ws-sample.pl")],	
+    EXE_FILES           => [("bin/ws-getUMLSInfo.pl", "bin/ws-getAllowablePath.pl", "bin/ws-sample.pl")],	
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean               => { FILES => 'WebService-UMLSKS-Similarity-*' },
 );

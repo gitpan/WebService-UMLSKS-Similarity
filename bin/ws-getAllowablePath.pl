@@ -42,11 +42,11 @@ It takes complete path and name of the file. The config file is expected in foll
 
 =over
 
-=item SAB :: SNOMEDCT,MSH
+=item SAB :: include SNOMEDCT,MSH
 
-=item REL :: PAR
+=item REL :: include PAR
 
-=item DIR :: U
+=item DIR :: include U
  
 =back 
 
@@ -255,6 +255,12 @@ $theTime\n************************************", $verbose);
 
 }
 
+if($log_file ne '' && $verbose eq '')
+{
+	print "\nPlease set verbose option to true to see the log\n";
+	exit;
+}
+
 if(defined $config_file && $config_file ne "")
 {
 	 $similarity = WebService::UMLSKS::Similarity->new({"config" => $config_file});
@@ -303,6 +309,12 @@ else
 				 $similarity = WebService::UMLSKS::Similarity->new({"sources" =>  \@source_list}	);
 				 msg("\n creating  object of similarity with sources", $verbose);
 				
+			}
+			
+			if($relations ne "" && $directions eq "")
+			{
+				print "\nYou have not supplied directions for your relations\n";
+				exit;
 			}
 		}
 
@@ -596,12 +608,12 @@ while ( $continue == 1 ) {
 		# If the inputs are invalid, accepts new input
 		if($isvalid_input1 eq 'invalid') 
 		{
-			print "\n* Your first input is not a valid CUI";
+			print "\n Your first input is not a valid CUI";
 			next;
 		}
 		elsif($isvalid_input2 eq 'invalid') 
 		{
-			print "\n* Your second input is not a valid CUI";
+			print "\n Your second input is not a valid CUI";
 			next;
 		}
 		
@@ -619,6 +631,7 @@ while ( $continue == 1 ) {
 				if(!%CUI_ref)
 				{
 					print "\n Term $term1 does not exist in database.";
+						
 					next;
 				}
 				else
@@ -738,10 +751,14 @@ while ( $continue == 1 ) {
 			
 
 
-
-	
 	
 }
+
+
+undef @sources;
+undef @relations;
+undef @directions;
+	
 
 #-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
 

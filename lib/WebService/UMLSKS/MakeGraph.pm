@@ -50,8 +50,8 @@ use Log::Message::Simple qw[msg error debug];
 my %node_cost = ();
 my %Graph     = ();
 
-my $const_C = 10;
-my $const_k = 1;
+my $const_C = 20;
+my $const_k = 1 / 4;
 
 my %MetaCUIs = (
 	'C0332280' => 'Linkage concept',
@@ -72,6 +72,9 @@ my @sources   = ();
 my @relations = ();
 my @directions = ();
 
+my $source;
+my $destination;
+my $tflag;
 my $verbose = 0;
 
 #open (LOG ,">", "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/log") or die "could not open log file";
@@ -113,6 +116,14 @@ sub form_graph
 	my $test_flag = shift;
 
 
+
+	# Set the source and destination for use in other functions
+	
+	$source = $term1;
+	$destination = $term2;
+	$tflag = $test_flag;
+	
+	
 	# If this is a testing mode, then create an output file
 	if($test_flag == 1)
 		{
@@ -180,7 +191,7 @@ sub form_graph
 	my $final_cost;
 	my $counter             = 0;
 	my $change_in_direction = 0;
-
+	my @path_direction = ();
 
 	#until queue is empty
 	while ( $#queue != -1 ) {
@@ -228,7 +239,7 @@ sub form_graph
 			if ( $counter == 2 ) {
 				if ( $term1 eq $term2 ) {
 					
-					print OUTPUT "10<>$term1<>$term2\n";
+					print OUTPUT "20<>$term1<>$term2\n";
 					print
 "\n Both the input terms share extra strong relation as they are same";
 					msg(
@@ -421,6 +432,7 @@ sub form_graph
 		#getinfo -> getGraph();
 
 		@current_shortest_path = ();
+		@path_direction = ();
 
 	  # Check if a shortest allowable path exists between source and destination
 		my $get_path_info_result =
@@ -431,6 +443,7 @@ sub form_graph
 			@current_shortest_path  = @{ shift(@path_info) };
 			$current_available_cost = shift(@path_info);
 			$change_in_direction    = shift(@path_info);
+			@path_direction = @{ shift(@path_info)};
 		}
 		if($get_path_info_result == -2)
 		{
@@ -449,6 +462,8 @@ sub form_graph
 
 		msg( "\n current available path cost : $current_available_cost",
 			$verbose );
+		msg( "\n current available path direction : @path_direction",
+			$verbose );	
 
 	}
 
@@ -457,12 +472,22 @@ sub form_graph
 		
 		my %Concept = %$WebService::UMLSKS::GetNeighbors::ConceptInfo_ref;
 
-		my $semantic_relatedness =
-		  $const_C - ($final_cost/10) - $const_k * $change_in_direction;
+		my $initial_relatedness =  $const_C - ($final_cost/10);
+		my $semantic_relatedness = $initial_relatedness -
+						(($const_k * $initial_relatedness) * $change_in_direction);
 
 		print "\n Final shortest path :";
-		foreach my $n (@current_shortest_path) {
-			print "->$Concept{$n} ($n)";
+		
+		for my $n (0 .. $#current_shortest_path) {
+			if($n < $#current_shortest_path){
+				print "$Concept{$current_shortest_path[$n]} ($current_shortest_path[$n]) ($path_direction[$n])->";
+			}
+			else
+			{
+				print "$Concept{$current_shortest_path[$n]} ($current_shortest_path[$n])";
+			}
+			
+			
 		}
 
 		msg( "\n Final shortest path : ", $verbose );
@@ -488,7 +513,7 @@ sub form_graph
 	{
 		if($test_flag == 1)
 		{
-			print OUTPUT "0<>$term1<>$term2\n";
+			print OUTPUT "-1<>$term1<>$term2\n";
 		}
 		print "\n No shortest allowable path found between the input terms/CUIs\n";
 	}
@@ -575,10 +600,20 @@ This subroutines queries webservice getConceptProperties
 
 		if ( $return_ref eq 'undefined' ) {
 			print "\n The CUI/term does not exist";
+			
 			return 'undefined';
 		}
 		elsif ( $return_ref eq 'empty' ) {
 			print "\n No information found for $cui in current Source/s";
+			if($tflag == 1)
+			{
+				open(OUT,">>","output.txt") or die("Error: cannot open file 'output.txt'\n");
+				print OUTPUT "-1<>$source<>$destination\n";
+				close OUT;
+			}
+						
+			
+			
 			return 'empty';
 		}
 		else {
@@ -615,6 +650,12 @@ This subroutines prints the current contents of hash of hash
 		}
 
 	}
+	
+undef %node_cost;
+undef %Graph;
+undef @sources;
+undef @relations;
+undef @directions;	
 
 	1;
 

@@ -17,7 +17,7 @@ Version 0.04
 
 =cut
 
-our $VERSION = '0.12';
+our $VERSION = '0.13';
 
 =head1 SYNOPSIS
 
@@ -137,14 +137,14 @@ sub initialiseParameters {
 	}
 	
 		
-		# If user has not provided a configuration file but has directly
-		# provided the configuration option in params hash
-
 	#print "\n *****file path name: $file_path_name";
 	
 	
 	
 	if(defined $file_path_name && $file_path_name ne "") {
+		
+		my $pflag = 0;
+		my $dflag = 1;
 			# If user has provided a configuration file
 		open( CONFIG, $file_path_name )
 		  or die("Error: cannot open configuration file '$file_path_name'\n");
@@ -163,47 +163,76 @@ sub initialiseParameters {
 			$parameter_value =~ s/\s*//g;
 			$flag =~ s/\s*//g;
 			#my @parameter_array
-			if (defined $parameter_name && defined $flag && defined $parameter_value){
-			# If more than one sources/relations specified, then seperate by comma
-			if($parameter_value =~ /\,/){
+			if ($parameter_name && $flag && $parameter_value){
 				
-			 @parameter_array = split("," , $parameter_value); 
-			}
-			else{
-				
-			 $parameter_array[0] = $parameter_value;
-			 
-			}
-			$parameter_name =~ s/\s*//g;
-			#chop($parameter_name);
-		
-			if($flag =~/\binclude\b/)
-			{
-				#print "\n including @parameter_array";
-				$self->{$parameter_name} = \@parameter_array;
-				msg("\n in hash $parameter_name: @{$self->{$parameter_name}}");
-			}
-			elsif ($flag =~ /\bexclude\b/)
-			{
-				# Dont do anything for now
-				print "\n Invalid configurations: does not handle exclude yet";
-				
-			}
-			else
-			{
-				print "\n Invalid configurations";
-			}
+					
+				# If more than one sources/relations specified, then seperate by comma
+				if($parameter_value =~ /\,/){
+					
+				 @parameter_array = split("," , $parameter_value); 
+				}
+				else{
+					
+				 $parameter_array[0] = $parameter_value;
+				 
+				}
+				$parameter_name =~ s/\s*//g;
+				#chop($parameter_name);
+			
+				if($parameter_name =~ /REL/)
+				{
+					$pflag = 1;
+					$dflag = 0;
+				}
+				if($pflag == 1)
+				{
+					if ($parameter_name =~ /DIR/){
+						$dflag = 1;
+					}
+				}
+				if($flag =~/\binclude\b/)
+				{
+					#print "\n including @parameter_array";
+					$self->{$parameter_name} = \@parameter_array;
+					msg("\n in hash $parameter_name: @{$self->{$parameter_name}}");
+				}
+				elsif ($flag =~ /\bexclude\b/)
+				{
+					# Dont do anything for now
+					print "\n Invalid configurations: does not handle exclude yet\n";
+					print "\nPlease specify valid configuaration file by refering to the documentation\n";
+					exit;
+					
+				}
+				else
+				{
+					print "\n Invalid configurations, may be forgot to have 'include' keyword\n";
+					print "\nPlease specify valid configuaration file by refering to the documentation\n";
+					exit;
+				}
 			}
 			else
 			
 			{
-				print "\n Invalid configurations";
+				print "\n Invalid configurations\n";
+				print "\nPlease specify valid configuaration file by refering to the documentation\n";
+				exit;
 			}
 			
+		}
+		if($dflag == 0)
+		{
+			print "\nIf relations are specified, it is necessay to specify directions for them";
+			print "\nPlease specify valid configuaration file by refering to the documentation\n";
+			exit;
 		}
 	}
 	else
 	{
+		
+		# If user has not provided a configuration file but has directly
+		# provided the configuration option in params hash		
+		
 		# if no configuration file is specified
 		# if configuration parameters are set using hash as parameter
 		
