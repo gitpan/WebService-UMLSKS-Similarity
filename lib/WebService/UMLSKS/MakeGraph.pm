@@ -35,12 +35,16 @@ use SOAP::Lite;
 use strict;
 no warnings qw/redefine/;    #http://www.perlmonks.org/?node_id=582220
 
+
 use WebService::UMLSKS::GetAllowablePaths;
 use WebService::UMLSKS::GetNeighbors;
 #use WebService::UMLSKS::GetParents;
 use WebService::UMLSKS::Query;
 use WebService::UMLSKS::ConnectUMLS;
 use WebService::UMLSKS::Similarity;
+#use Devel::Leak;
+
+#use Proc::ProcessTable;
 
 package WebService::UMLSKS::MakeGraph;
 
@@ -93,6 +97,21 @@ sub new {
 	bless( $self, $class );
 	return $self;
 }
+
+
+
+
+#sub memory_usage {
+#  my $t = new Proc::ProcessTable;
+#  foreach my $got ( @{$t->table} ) {
+#    next if not $got->pid eq $$;
+#    return $got->size;
+#  }
+#}
+
+
+
+
 
 =head2 form_graph
 
@@ -149,6 +168,8 @@ sub form_graph
 	}
 
 	msg("\n in makegraph",$verbose);
+	
+	
 	#printHash(\%Directions);
 	
 	msg( "\n Sources used are : @sources", $verbose );
@@ -192,10 +213,14 @@ sub form_graph
 	my $counter             = 0;
 	my $change_in_direction = 0;
 	my @path_direction = ();
+	my $handle; # apparently this doesn't need to be anything at all
+	my $leaveCount = 0;
 
 	#until queue is empty
 	while ( $#queue != -1 ) {
 
+		
+		#print "inside while loop of queue , before poping element memory: ". memory_usage()/1024/1024 ."\n";
 		@parents = ();
 		@sib     = ();
 		@children = ();
@@ -212,12 +237,14 @@ sub form_graph
 		"\n current node : $current_node and cost till here : $cost_upto_current_node",
 			$verbose
 		);
-		if ( $cost_upto_current_node >= $current_available_cost ) {
+		if ( $cost_upto_current_node >= $current_available_cost - 10 ) {
 			msg( "\n ########\nIgnore node as it would lead to longer path",
 				$verbose );
 			next;
 		}
-
+		#my $enterCount = Devel::Leak::NoteSV($handle);
+		#print STDERR "ENTER: $enterCount SVs\n";
+		
 		my $neighbors_hash_ref =
 		  call_getconceptproperties( $current_node, $service );
 		  if ( $neighbors_hash_ref eq 'undefined' |
@@ -226,9 +253,21 @@ sub form_graph
 			msg("\n no neighbors for $current_node",$verbose);
 			next;
 		}
+		
+		
+		##print "memory after calling webservice for $current_node: ". memory_usage()/1024/1024 ."\n";
+		#$leaveCount = Devel::Leak::CheckSV($handle);
+		#print STDERR "\nLEAVE: $leaveCount SVs\n";
+		
 		my $neighbors_info_ref =
 		  $read_parents->read_object( $neighbors_hash_ref, $current_node, $verbose,\%Directions );
-
+		  
+		##print "memory after calling read_object for $current_node: ". memory_usage()/1024/1024 ."\n";
+		
+		undef $neighbors_hash_ref;
+		
+		##print "memory after undef neighbors_hash: ". memory_usage()/1024/1024 ."\n";
+		
 		if (  $neighbors_info_ref eq 'empty' )
 		{
 			msg("\n no neighbors for $current_node",$verbose);
@@ -253,10 +292,16 @@ sub form_graph
 		   # For the graph using the parents, children and siblings of the term.
 			my @n = @$neighbors_info_ref;
 
+			
+			undef $neighbors_info_ref;
+			
+			##print "memory after undef neighbors info: ". memory_usage()/1024/1024 ."\n";	
 			my $p_ref = shift(@n);
 			my $c_ref = shift(@n);
 			my $s_ref = shift(@n);
-
+			
+			undef @n;
+			
 			if ( $p_ref ne 'empty' ) {
 				@parents = @{$p_ref};
 			}
@@ -294,6 +339,7 @@ sub form_graph
 			}
 		}
 
+		##print "memory after forming graph for $current_node: ". memory_usage()/1024/1024 ."\n";
 		msg( "\n parents of $current_node : @parents",  $verbose );
 		msg( "\n siblings of $current_node : @sib",     $verbose );
 		msg( "\n children of $current_node: @children", $verbose );
@@ -412,6 +458,7 @@ sub form_graph
 
 		}
 
+		#print "memory after updating node cost hash: ". memory_usage()/1024/1024 ."\n";
 		@queue = ();
 		foreach
 		  my $key ( sort { $node_cost{$a} <=> $node_cost{$b} } keys %node_cost )
@@ -420,7 +467,7 @@ sub form_graph
 				push( @queue, $key );
 			}
 		}
-
+		#print "memory after sorting queue: ". memory_usage()/1024/1024 ."\n";
 		#	if($#queue > 50)
 		#	{
 		#		print "\n Taking too long to find path.. so exiting!";
@@ -428,36 +475,72 @@ sub form_graph
 		#	}
 
 		my %subgraph = %Graph;
-
+	
+		#print "memory after forming subgraph as copy of graph: ". memory_usage()/1024/1024 ."\n";	
 		#getinfo -> getGraph();
 
-		@current_shortest_path = ();
-		@path_direction = ();
+	#	@current_shortest_path = ();
+	#		@path_direction = ();
 
 	  # Check if a shortest allowable path exists between source and destination
 		my $get_path_info_result =
 		  $get_paths->get_shortest_path_info( \%subgraph, $term1, $term2,
 			$verbose, $regex );
+		#print "memory after calling get paths: ". memory_usage()/1024/1024 ."\n";	
+			undef %subgraph;
+			%subgraph = ();
+		#print "memory after undef subgraph: ". memory_usage()/1024/1024 ."\n";	
 		if ( $get_path_info_result != -1 && $get_path_info_result != -2 ) {
 			my @path_info = @$get_path_info_result;
 			@current_shortest_path  = @{ shift(@path_info) };
 			$current_available_cost = shift(@path_info);
 			$change_in_direction    = shift(@path_info);
 			@path_direction = @{ shift(@path_info)};
+			$final_cost = $current_available_cost;
+			
+			my $continue_searching = 0;
+			foreach my $key (keys %Directions){
+				if($Directions{$key} eq "H")
+				{
+					msg("This test has horizontal relation so, finding better path",$verbose);
+					$continue_searching = 1;
+				}
+			}
+			
+			if($continue_searching == 0){
+				last;
+			}
+			
+			
 		}
 		if($get_path_info_result == -2)
 		{
+			if(@current_shortest_path)
+			{
+				msg( "\n Stopped searching as the path length exceeds the threshold value", $verbose);
+				last;
+			}
+			else
+			{
+				msg( "\n Stopped searching as the path length exceeds the threshold value", $verbose);
+				if($test_flag == 1)
+				{
+					print OUTPUT "0<>$term1<>$term2\n";
+				}
+				last;
+			}
 			# Stop seraching for shortest path as the path length has already increased
 			# the threshold value.
-			print OUTPUT "0<>$term1<>$term2\n";
-			print "\n Stopped searching as the path length exceeds the threshold value";
 			
-			last;
+			
+			
+			
 			
 			
 		}
+	
 
-		$final_cost = $current_available_cost;
+		
 		msg( "\n current shortest path : @current_shortest_path", $verbose );
 
 		msg( "\n current available path cost : $current_available_cost",
@@ -467,11 +550,16 @@ sub form_graph
 
 	}
 
-	
+	#print "memory after while loop ends: ". memory_usage()/1024/1024 ."\n";
 	if (@current_shortest_path) {
 		
+		undef %Graph;
+		undef %node_cost;
+		#print "memory after undef graph and node cost: ". memory_usage()/1024/1024 ."\n";
 		my %Concept = %$WebService::UMLSKS::GetNeighbors::ConceptInfo_ref;
-
+		
+		undef ${WebService::UMLSKS::GetNeighbors::ConceptInfo_ref};
+		#print "memory after undef concept info ref: ". memory_usage()/1024/1024 ."\n";
 		my $initial_relatedness =  $const_C - ($final_cost/10);
 		my $semantic_relatedness = $initial_relatedness -
 						(($const_k * $initial_relatedness) * $change_in_direction);
@@ -495,6 +583,8 @@ sub form_graph
 			msg( "->$Concept{$n} ($n)", $verbose );
 		}
 
+		undef %Concept;
+		#print "memory after undef hash concept: ". memory_usage()/1024/1024 ."\n";
 		print "\n Final path cost : $final_cost";
 		msg( "\n Final path cost : $final_cost", $verbose );
 
@@ -524,6 +614,7 @@ if($test_flag == 1){
 	close OUTPUT;
 }
 
+#print "memory at end of form graph: ". memory_usage()/1024/1024 ."\n";
 	
 }
 
@@ -564,8 +655,9 @@ This subroutines queries webservice getConceptProperties
 
 		#print "\n calling ws for cui $cui";
 		$service->readable(1);
-		my $return_ref;
+		my $return_ref = "";
 		
+	
 		$return_ref = $query->runQuery(
 			$service, $cui,
 			'getConceptProperties',
@@ -579,7 +671,7 @@ This subroutines queries webservice getConceptProperties
 
 				# CUI => "asfa",
 				language => 'ENG',
-				release  => '2009AA',
+				release  => '2010AB',
 
 				SABs => [ (@sources) ],
 
@@ -600,19 +692,22 @@ This subroutines queries webservice getConceptProperties
 
 		if ( $return_ref eq 'undefined' ) {
 			print "\n The CUI/term does not exist";
-			
+			undef $return_ref;
 			return 'undefined';
 		}
 		elsif ( $return_ref eq 'empty' ) {
-			print "\n No information found for $cui in current Source/s";
-			if($tflag == 1)
-			{
-				open(OUT,">>","output.txt") or die("Error: cannot open file 'output.txt'\n");
-				print OUTPUT "-1<>$source<>$destination\n";
-				close OUT;
-			}
-						
+			undef $return_ref;
+			if($cui eq $source || $cui eq $destination){
+				#print "\n No information found for $cui in current Source/s";
 			
+				if($tflag == 1)
+				{
+					open(OUT,">>","output.txt") or die("Error: cannot open file 'output.txt'\n");
+					print OUTPUT "-1<>$source<>$destination\n";
+					close OUT;
+				}
+							
+			}
 			
 			return 'empty';
 		}
@@ -661,7 +756,7 @@ undef @directions;
 
 #-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
 
-## =back spurious back removed by tdp
+
 
 =head1 SEE ALSO
 

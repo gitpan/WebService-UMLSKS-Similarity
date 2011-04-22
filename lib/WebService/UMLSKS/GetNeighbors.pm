@@ -136,6 +136,7 @@ sub read_object {
 		push(@neighbors,"empty");
 	}
 	
+	#undef $object_refr;
 	return \@neighbors;
 	
 }
@@ -224,6 +225,8 @@ sub format_object {
 			return 'term is not present';
 		}
 	}
+	
+	undef $object_ref;
 }
 
 
@@ -255,7 +258,6 @@ This sub formats hash.
 sub format_homogeneous_hash {
 	
 	my $hash_ref = shift;
-	my @incl_rows = ();
 	my $flag   = 0;
 	my $flag2  = 0;
 	my $t_flag = 0;
@@ -361,16 +363,6 @@ sub format_homogeneous_hash {
 	}
 
 }
-
-
-
-
-
-
-
-
-
-
 
 
 =head2 format_homogeneous_array

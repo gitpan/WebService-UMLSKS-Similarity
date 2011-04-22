@@ -195,6 +195,7 @@ use WebService::UMLSKS::ConnectUMLS;
 use WebService::UMLSKS::Similarity;
 use WebService::UMLSKS::MakeGraph;
 use WebService::UMLSKS::GetCUIs;
+#use WebService::UMLSKS::GetAllowableShortestPath;
 use Log::Message::Simple qw[msg error debug];
 
 #use get_all_associatedCUIs;
@@ -534,6 +535,8 @@ my $get_CUIs = WebService::UMLSKS::GetCUIs->new;
 # Creating object of MakeGraph
 
 my $form_graph = WebService::UMLSKS::MakeGraph->new;
+#my $form_graph = WebService::UMLSKS::GetAllowableShortestPath->new;
+
 
 my $proxy_ticket = $c->get_pt();
 
@@ -765,7 +768,7 @@ undef @directions;
 
 =head1 SEE ALSO 
 
-ValidateCUI.pm  GetUserData.pm  Query.pm  ConnectUMLS.pm GetParents.pm FindPaths.pm
+ValidateCUI.pm  GetUserData.pm  Query.pm  ConnectUMLS.pm 
 
 =cut
 

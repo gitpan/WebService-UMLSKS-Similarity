@@ -129,6 +129,7 @@ sub runQuery {
 							my $cui = $value;
 							if($cui)
 							{
+								
 								return $cui;
 								
 							}
@@ -142,6 +143,7 @@ sub runQuery {
 				}
 			}
 			else {
+				
 					return $object_ref;
 
 			

@@ -33,10 +33,19 @@ The subroutines are as follows:
 
 
 #use lib "/home/mugdha/workspace/getInfo";
+
+
+#use lib "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/lib";
 use warnings;
 use SOAP::Lite;
 use strict;
 no warnings qw/redefine/;    #http://www.perlmonks.org/?node_id=582220
+
+use WebService::UMLSKS::GetNeighbors;
+
+#use Proc::ProcessTable;
+
+
 
 package WebService::UMLSKS::GetAllowablePaths;
 
@@ -48,8 +57,8 @@ use Log::Message::Simple qw[msg error debug];
 my $verbose = 0;
 my $regex = "";
 
-
-
+my $current_shortest_length = 30000;
+my %Concept = ();
 
 =head2 new
 
@@ -63,6 +72,16 @@ sub new {
 	bless( $self, $class );
 	return $self;
 }
+
+
+
+#sub memory_usage {
+#  my $t = new Proc::ProcessTable;
+#  foreach my $got ( @{$t->table} ) {
+#    next if not $got->pid eq $$;
+#    return $got->size;
+#  }
+#}
 
 
 =head2 get_shortest_path_info
@@ -82,24 +101,40 @@ sub get_shortest_path_info
 	$regex = shift;
 	$verbose = $ver;
 	
+	
+	#print "memory after just coming inside get_shortest_path_info: ". memory_usage()/1024/1024 ."\n";
+	
+	
+	
+	 %Concept = %$WebService::UMLSKS::GetNeighbors::ConceptInfo_ref;
+	#%Concept = %Conceptinfo;
+	
+	#print "memory get_shortest_path_info:after initialising hash concept ". memory_usage()/1024/1024 ."\n";
+	#print "memory get_shortest_path_info: ". memory_usage()/1024/1024 ."\n";
+	
 	#printHoH($hash_ref);
-	if(get_allpaths($hash_ref,$source,$destination) != -1){
-	my @possible_paths = @{get_allpaths($hash_ref,$source,$destination)};
-	msg( "\npossible paths between $source and $destination : @possible_paths", $verbose);
-	if($#possible_paths != -1 )
-	{
-		my @allowable_paths =();
+	my $getallpaths_ref = get_allpaths($hash_ref,$source,$destination,$regex);
+	#print "memory get_shortest_path_info:after get all paths ". memory_usage()/1024/1024 ."\n";
+	
+	if($getallpaths_ref != -1){
+		my @possible_paths = @{$getallpaths_ref};
 		
-			 @allowable_paths = @{get_allowable_paths( \@possible_paths, $hash_ref, $regex)};
-			msg( "\n allowable  paths between $source and $destination : @allowable_paths", $verbose);
+		#undef $getallpaths_ref;
+		#print "memory get_shortest_path_info:after undef getallpath_ref ". memory_usage()/1024/1024 ."\n";
+		#msg( "\npossible paths between $source and $destination : @possible_paths", $verbose);
 		
-		if($#allowable_paths != -1)
+		if($#possible_paths != -1 )
 		{
-			my @shortest_path_info = @{get_shortest_path( \@allowable_paths , $hash_ref)};
-				if ($#shortest_path_info != -1)
+			my @shortest_path_info = @{get_shortest_path( \@possible_paths , $hash_ref)};
+		#	print "memory get_shortest_path_info:after get shortest path is called ". memory_usage()/1024/1024 ."\n";
+			undef @possible_paths;
+		#	print "memory get_shortest_path_info:after undef possible paths array ". memory_usage()/1024/1024 ."\n";
+			undef $hash_ref;
+		#	print "memory get_shortest_path_info:after undef the hash ref ". memory_usage()/1024/1024 ."\n";
+			if ($#shortest_path_info != -1)
 				{
 					return \@shortest_path_info;
-	
+		
 				}
 				else
 				{
@@ -108,28 +143,15 @@ sub get_shortest_path_info
 		}
 		else
 		{
-			
-			
-				return -1;
-			
-			
-		}
+			return -1;
+		}	
 	}
-	else
+	elsif($getallpaths_ref == -1)
 	{
-		return -1;
-	}
-	
-	
-	}
-	else
-{
-	
-				# If there is no meaningful path between resources and path distance has crossed th ethreshold
-				# then return -2;
-				return -2;
-}
+		return -2;
 		
+	}	
+
 	
 }
 
@@ -152,9 +174,15 @@ sub get_allpaths {
 	# Source and destination
 	my $source      = shift;
 	my $destination = shift;
+	my $allowed_patterns_regex = shift;
 	my %graph       = %$hash_ref;
+	
 	#printHoH(\%graph);
 
+
+		#print "memory get_allpaths: after creating copy of graph ". memory_usage()/1024/1024 ."\n";
+		#print "memory get_allpaths: ". memory_usage()/1024/1024 ."\n";
+	
 # FIFO queue used for Breadth First Traversal
 # This queue is a list of list
 # Each element is a path (list) to a node which is last element of the list
@@ -176,21 +204,38 @@ sub get_allpaths {
 
 	# List used to store the temporary paths
 	my @temp_path = ();
-
+	#print "memory get_allpaths:before while loop ". memory_usage()/1024/1024 ."\n";
+	
+	my $counter = 0;
+	
 	# While queue is not empty traverse the graph
 	while ( $#queue != -1 ) {
+		
+		$counter++;
+	#	print "memory get_allpaths:just in while loop ". memory_usage()/1024/1024 ."\n";
 		my $temp_path_ref = shift(@queue);
 		@temp_path = @$temp_path_ref;
 		my $last_node = $temp_path[$#temp_path];
-
+		
 		if ( $last_node eq $destination ) {
 
+			#print "memory get_allpaths:got one of the path ". memory_usage()/1024/1024 ."\n";
 			# one of the paths is found so store it.
 
 			my @possiblepath = @temp_path;
+			
+		
+			
+				#print "memory get_allpaths:before checking allowable ". memory_usage()/1024/1024 ."\n";			
+			
+				#print "memory get_allpaths:after checking allowable ". memory_usage()/1024/1024 ."\n";				
+			
 			push( @possible_paths, \@possiblepath );
 
 		}
+		
+		
+			#print "memory get_allpaths:before traversing neighbors ". memory_usage()/1024/1024 ."\n";			
 		foreach my $link_node ( keys %{ $graph{$last_node} } ) {
 
 			# Traverse all the neighbors of the current node in queue
@@ -202,17 +247,46 @@ sub get_allpaths {
 				my @new_path = ();
 				@new_path = @temp_path;
 				push( @new_path, $link_node );
-				my $new_path_ref = \@new_path;
-				push( @queue, $new_path_ref );
+				
+				
+				# Check if this path is allowable
+				my $path_string = "";
+				for my $i ( 0 .. $#new_path - 1 ) {
+					my $first_node = $new_path[$i];
+					my $next_node  = $new_path[ $i + 1 ];
+					my $direction  = $graph{$first_node}{$next_node};
+					$path_string = "$path_string" . "$direction"; # i HATE THIS LINEEEEEEE
+	
+			    }
+				
+				if ( $path_string =~ m/$allowed_patterns_regex/ ) {
+					#msg("\n path $path_string is allowed", $verbose);
+					my $new_path_ref = \@new_path;
+					push( @queue, $new_path_ref );
+
+				}	
+				
+				
+				
+				
+			
 
 			}
+			
 		}
+			#print "memory get_allpaths:after traversing neighbors ". memory_usage()/1024/1024 ."\n";			
 	}
 
+	#print "memory get_allpaths: after finding all paths ". memory_usage()/1024/1024 ."\n";
+	undef %graph;
+	undef $hash_ref;
+	
+	#print "memory get_allpaths:after undef graph and ref ". memory_usage()/1024/1024 ."\n";
+	
 	if($#possible_paths != -1)
 	{
 	msg("\n************************************************************", $verbose);
-	msg("\n All possible paths between $source and $destination are:", $verbose);
+	#msg("\n All possible paths between $source and $destination are:", $verbose);
 	
 	my $stop_flag = 0;
 	
@@ -220,110 +294,35 @@ sub get_allpaths {
 	# If all possible paths exceed above threshold then stop searching
 	foreach my $i ( 0 .. $#possible_paths ) {
 		my @path = @{ $possible_paths[$i] };
-		if($#path < 25){
+		if($#path <= $current_shortest_length || $#path <= 20){
 			$stop_flag = 1; 
 		}
+		
 		
 	}
 	if($stop_flag == 0)
 	{
+		msg("\n********* STOP ***********\n", $verbose);
 		return -1;
 	}
 	
 	
-	foreach my $i ( 0 .. $#possible_paths ) {
-		my @path = @{ $possible_paths[$i] };
+	#foreach my $i ( 0 .. $#possible_paths ) {
+	#	my @path = @{ $possible_paths[$i] };
 		
-		msg("\npath $i is : @path", $verbose);
-	}
-
+		#msg("\npath $i is : @path", $verbose);
+	#}
+	#print "memory get_allpaths:only possible path remaining ". memory_usage()/1024/1024 ."\n";
 	return \@possible_paths;
 	#get_allowable_paths( \@possible_paths, \%graph );
 	}
 	else
 	{
-		msg("\n no path exists between source and destination till now", $verbose);
+		msg("\n no path exists between $source and $destination till now", $verbose);
 		return \@possible_paths;
 	}
 }
 
-
-=head2 get_allowable_paths
-
-This sub filters set of allowable paths from all possible path.
-
-=cut
-
-sub get_allowable_paths {
-	my $all_paths_ref = shift;
-	my $graph_ref     = shift;
-	my $allowed_patterns_regex = shift;
-	my @all_paths     = @$all_paths_ref;
-	my %graph         = %$graph_ref;
-	
-	my @allowable_paths = ();
-
-   # This regex is formed using the allowed paths' patterns given in HSO paper
-   # Here 1, denotes upward arrow/vector, 2 denotes downward arrow and 3 denoted
-   # horizontal arrows.
-
-	# Currently any length of vector is allowed.
-	#my $allowed_patterns_regex = "";
-	#$allowed_patterns_regex = "$regex";
-	# default : '/\b1+\b|\b1+2+\b|\b1+3+\b|\b1+3+2+\b|\b2+\b|\b2+3+\b|\b3+2+\b|\b3+\b/';
-	 
-	msg ("\nin allowable paths : regex is : $allowed_patterns_regex",$verbose);
-	
-	# For all possible paths, for every path, form the path string using the
-	# directions of the paths that join source and destination
-	
-	msg( "\n ***********************************************************", $verbose);
-	msg( "\n Finding allowed paths", $verbose);
-
-
-	foreach my $path (@all_paths) {
-		my @candidate_path = @$path;
-		msg( "\n possible candidate path : @candidate_path", $verbose);
-		my $path_string = "";
-		for my $i ( 0 .. $#candidate_path - 1 ) {
-			my $first_node = $candidate_path[$i];
-			my $next_node  = $candidate_path[ $i + 1 ];
-			my $direction  = $graph{$first_node}{$next_node};
-			$path_string = "$path_string" . "$direction"; # i HATE THIS LINEEEEEEE
-
-		}
-		msg("\n path_string formed : $path_string", $verbose);
-
-		# Now compare the path string formed for current path with the allowed
-		# patterns, to find out if this path is allowed or not.
-		# If allowed store it in the array of allowed paths.
-		
-		if ( $path_string =~ m/$allowed_patterns_regex/ ) {
-			msg("\n path $path_string is allowed", $verbose);
-			my $allowed_path_ref = \@candidate_path;
-			push( @allowable_paths, $allowed_path_ref );
-
-		}
-		else {
-			msg("\n path $path_string not allowed", $verbose);
-		}
-		
-
-	}
-
-	if($#allowable_paths != -1)
-	{
-		return \@allowable_paths;
-		#get_shortest_path( \@allowable_paths , \%graph);
-	}
-	else
-	{
-		msg("\n No allowed path found between given nodes", $verbose);
-		return \@allowable_paths;
-	}
-	
-
-}
 
 =head2 get_shortest_path
 
@@ -345,11 +344,11 @@ sub get_shortest_path {
 	my $path_cost = 100000;
 	my $shortest_path_ref;
 	my $change_in_direction = -1;
-	my $shortest_path_direction;
+	my @shortest_path_direction;
 	
 	foreach my $path (@allowed_paths) {
 		my @candidate_path = @$path;
-		msg("\n allowed candidate path  : @candidate_path", $verbose);
+		#msg("\n allowed candidate path  : @candidate_path", $verbose);
 
 		# Right now the shortest path is the one that has minimum nodes.
 #		my $current_path_len = $#candidate_path;
@@ -409,28 +408,34 @@ sub get_shortest_path {
 			}
 
 		}
-		msg("\n cost of candidte path : @candidate_path : is : $current_path_cost", $verbose);
-		msg("\n path cost is : $path_cost", $verbose);
+		#msg("\n cost of candidte path : @candidate_path : is : $current_path_cost", $verbose);
+		#msg("\n path cost is : $path_cost", $verbose);
 		if($current_path_cost < $path_cost)
 		{
 			$path_cost = $current_path_cost;
 			$shortest_path_ref = \@candidate_path;
-			#$shortest_path_direction = \@path_string;
+			@shortest_path_direction = @path_string;
 		}
 
 
 	}
 	my @shortest_path_info = ();
+	undef %graph;
+	undef $graph_ref;
+	undef @allowed_paths;
+	undef $allowed_paths_ref;
+	
 	if(defined $shortest_path_ref)
 	{
+		$current_shortest_length = $path_cost / 10;
 		msg("\n shortest path : @$shortest_path_ref", $verbose);
 		msg("\n shortest cost : $path_cost", $verbose);
 		msg("\n changes in direction for current shortest path : $change_in_direction", $verbose );
-		msg("\n shortest path direction path string : @path_string", $verbose);
+		msg("\n shortest path direction path string : @shortest_path_direction", $verbose);
 		push(@shortest_path_info,$shortest_path_ref);
 		push(@shortest_path_info,$path_cost);
 		push(@shortest_path_info, $change_in_direction);
-		push(@shortest_path_info, \@path_string);
+		push(@shortest_path_info, \@shortest_path_direction);
 		
 		return \@shortest_path_info;
 	}

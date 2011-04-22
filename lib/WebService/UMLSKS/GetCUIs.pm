@@ -381,7 +381,7 @@ sub SOAP::Serializer::as_TermGroup {
 	return [ $name, { 'xsi:type' => 'TermGroup', %$attr }, $value ];
 }
 
-undef %TermCUI;
+#undef %TermCUI;
 
 
 #-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
