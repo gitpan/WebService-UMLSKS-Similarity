@@ -17,7 +17,7 @@ Version 0.04
 
 =cut
 
-our $VERSION = '0.14';
+our $VERSION = '0.15';
 
 =head1 SYNOPSIS
 
@@ -41,8 +41,9 @@ our $VERSION = '0.14';
 	The configuaration fie accepted by the module should be in the fillowing format
 	
 	SAB :: include SNOMEDCT,MSH
-	REL :: include PAR
-	DIR :: include U
+	REL :: include PAR,RB
+	DIR :: include U,H
+	RELA :: include RB-has_part
 	
 	Here, SAB is the sources and REL is relations you want to include in 
 	searching the UMLS. The list of sources and relations can be provided 
@@ -78,8 +79,9 @@ sub new {
 	my @s_array = ("SNOMEDCT");
 	my @r_array = ("PAR");
 	my @d_array = ("U");
+	my @a_array = ();
 	
-	my  %ConfigurationParameters = ("SAB" ,\@s_array,"REL",\@r_array,"DIR",\@d_array);
+	my  %ConfigurationParameters = ("SAB" ,\@s_array,"REL",\@r_array,"DIR",\@d_array,"RELA",\@a_array);
 	my $self   = \%ConfigurationParameters; 
 	
 	
@@ -150,19 +152,26 @@ sub initialiseParameters {
 		  or die("Error: cannot open configuration file '$file_path_name'\n");
 
 		my @parameters = <CONFIG>;
-		foreach my $param (@parameters){
+		
+		for my $p (0.. $#parameters){
 			
 		#	print "\n $param";
-			$param =~ /\s*(.*)\s*::\s*(.*?) (.*?)$/;
+		
+			
+			$parameters[$p] =~ /\s*(.*)\s*::\s*(.*?) (.*?)$/;
 			msg( "\n $1 \t $2 \t $3");
 			my $parameter_name = $1;
 			my $flag = $2;
 			my $parameter_value = $3;
 			my @parameter_array = ();
+			
 			$parameter_name =~ s/\s*//g;
 			$parameter_value =~ s/\s*//g;
 			$flag =~ s/\s*//g;
 			#my @parameter_array
+			
+			
+			
 			if ($parameter_name && $flag && $parameter_value){
 				
 					
@@ -176,10 +185,11 @@ sub initialiseParameters {
 				 $parameter_array[0] = $parameter_value;
 				 
 				}
+				
 				$parameter_name =~ s/\s*//g;
 				#chop($parameter_name);
 			
-				if($parameter_name =~ /REL/)
+				if($parameter_name =~ /\bREL\b/)
 				{
 					$pflag = 1;
 					$dflag = 0;

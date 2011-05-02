@@ -146,7 +146,7 @@ sub get_pt {
 
 #-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
 
-## =back spurious back removed by tdp
+
 
 
 =head1 SEE ALSO

@@ -44,9 +44,11 @@ It takes complete path and name of the file. The config file is expected in foll
 
 =item SAB :: include SNOMEDCT,MSH
 
-=item REL :: include PAR
+=item REL :: include PAR,RB
 
-=item DIR :: include U
+=item DIR :: include U,H
+
+=item RELA :: include RB-has_part
  
 =back 
 
@@ -188,14 +190,13 @@ use SOAP::Lite;
 use Term::ReadKey;
 use WebService::UMLSKS::GetUserData;
 use WebService::UMLSKS::ValidateTerm;
-#use WebService::UMLSKS::FindPaths;
 use WebService::UMLSKS::Query;
 use WebService::UMLSKS::ConnectUMLS;
-#use WebService::UMLSKS::GetParents;
 use WebService::UMLSKS::Similarity;
-use WebService::UMLSKS::MakeGraph;
+#use WebService::UMLSKS::MakeGraph;
 use WebService::UMLSKS::GetCUIs;
 #use WebService::UMLSKS::GetAllowableShortestPath;
+use WebService::UMLSKS::FormGraph;
 use Log::Message::Simple qw[msg error debug];
 
 #use get_all_associatedCUIs;
@@ -221,11 +222,13 @@ my $similarity;
 my $config_file = '';
 my $login_file = '';
 my $test_file = '';
-
+my $input1 = '';
+my $input2 = '';
 
 
 GetOptions( 'verbose:i' => \$verbose , 'sources=s' => \$sources , 'rels=s' =>\$relations, 'dirs=s' =>\$directions,
- 'config=s' =>\$config_file, 'log=s' => \$log_file, 'login=s' => \$login_file ,'patterns=s' => \$patterns_file, 'testfile=s' => \$test_file,);
+ 'config=s' =>\$config_file, 'log=s' => \$log_file, 'login=s' => \$login_file ,'patterns=s' => \$patterns_file, 
+ 'testfile=s' => \$test_file, 'input1=s' => \$input1, 'input2=s'=>\$input2);
 
 # Reference for use of Log package
 # http://perldoc.perl.org/Log/Message/Simple.html#msg(%22message-string%22-%5b%2cVERBOSE%5d)
@@ -345,15 +348,31 @@ else
 my @sources = @{$similarity->{'SAB'}};
 my @relations = @{$similarity->{'REL'}};
 my @directions = @{$similarity->{'DIR'}};
-my $test_flag = 0;
+my @attributes = @{$similarity->{'RELA'}};
 
+my $test_flag = 0;
+my $scriptflag = 0;
 my %input = ();
 my @querylist1 = ();
 my @querylist2 = ();
 
-msg("\n sources:@sources rels:@relations and dirs:@directions", $verbose);
+msg("\n sources:@sources rels:@relations and dirs:@directions and attributes : @attributes", $verbose);
 
 # If this is a testing mode, then setr continue to length of the file i.e. number of rows
+
+if($input1 ne "" && $input2 ne "")
+{
+	# Inputs are specified through script.
+	$scriptflag = 1;
+	
+	# This is creating the file for writing output
+	#open(OUTPUT,">","output.txt") or die("Error: cannot open file 'output.txt'\n");
+	#close OUTPUT;
+	
+	#open(TIME,">","time.txt") or die("Error: cannot open file 'time.txt'\n");
+	#close TIME;
+}
+
 
 if($test_file ne ""){
 	
@@ -361,8 +380,15 @@ if($test_file ne ""){
 	
 	
 	# This is creating the file for writing output
-	open(OUT,">","output.txt") or die("Error: cannot open file 'output.txt'\n");
-	close OUT;	
+	open(OUTPUT,">","output.txt") or die("Error: cannot open file 'output.txt'\n");
+	close OUTPUT;
+	
+	#open(TIME,">","time.txt") or die("Error: cannot open file 'time.txt'\n");
+	#close TIME;
+	
+	#open(OUT,">","inter_output.txt") or die("Error: cannot open file 'inter_output.txt'\n");
+	#close OUT;
+		
 	my $line;
 	$test_flag = 1;
 	my $lnum = 1;
@@ -534,9 +560,9 @@ my $get_CUIs = WebService::UMLSKS::GetCUIs->new;
 
 # Creating object of MakeGraph
 
-my $form_graph = WebService::UMLSKS::MakeGraph->new;
+#my $form_graph = WebService::UMLSKS::MakeGraph->new;
 #my $form_graph = WebService::UMLSKS::GetAllowableShortestPath->new;
-
+my $form_graph = WebService::UMLSKS::FormGraph->new;
 
 my $proxy_ticket = $c->get_pt();
 
@@ -556,12 +582,21 @@ while ( $continue == 1 ) {
 		$currenttest++;
 		if(!$term1)
 		{
-			print "\nend of test";
+			#print "\nend of test";
 			$continue = 0;
 			next;
 			
 		}
 		msg("term1: $term1 , term2 :$term2 ", $verbose);
+		
+	}
+	if($scriptflag == 1 && $test_flag == 0)
+	{
+		$term1 = "";
+		$term2 = "";
+		$term1 = $input1;
+		$term2 = $input2;
+		$test_flag = 1;
 		
 	}
 	
@@ -699,7 +734,7 @@ while ( $continue == 1 ) {
 		
 			msg("\n before calling form grpah : regex: $allowable_pattern_regex", $verbose);
 			my $return_val = $form_graph->
-			form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions,$allowable_pattern_regex,$test_flag);
+			form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions,\@attributes,$allowable_pattern_regex,$test_flag);
 			if($return_val eq 'same'){
 			next;
 			}			
@@ -725,7 +760,7 @@ while ( $continue == 1 ) {
 						my $t2 = $allCUIOfTerm2[$j];
 						print "\n\nterm 1 : $t1 term 2 : $t2";
 						my $return_val = 
-						$form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions, $allowable_pattern_regex,$test_flag);
+						$form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions,\@attributes,$allowable_pattern_regex,$test_flag);
 						if($return_val eq 'same'){
 							print "\n $t1 and $t2 are same";
 							next;
@@ -744,7 +779,7 @@ while ( $continue == 1 ) {
 			 	 $t2 = $allCUIOfTerm2[0];
 			
 				my $return_val = $form_graph->
-				form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions,$allowable_pattern_regex,$test_flag);
+				form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions,\@attributes,$allowable_pattern_regex,$test_flag);
 				if($return_val eq 'same'){
 					next;
 				}			

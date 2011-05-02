@@ -36,26 +36,27 @@ use strict;
 no warnings qw/redefine/;    #http://www.perlmonks.org/?node_id=582220
 
 
-use WebService::UMLSKS::GetAllowablePaths;
+#use WebService::UMLSKS::GetAllowablePaths;
+use WebService::UMLSKS::GetAllowablePathsOld;
 use WebService::UMLSKS::GetNeighbors;
-#use WebService::UMLSKS::GetParents;
 use WebService::UMLSKS::Query;
 use WebService::UMLSKS::ConnectUMLS;
 use WebService::UMLSKS::Similarity;
-#use Devel::Leak;
-
 #use Proc::ProcessTable;
+#use Graph::Directed;
 
-package WebService::UMLSKS::MakeGraph;
+
+package WebService::UMLSKS::FormGraph;
 
 
 use Log::Message::Simple qw[msg error debug];
 
 my %node_cost = ();
 my %Graph     = ();
-
+my $counter = 0;
 my $const_C = 20;
 my $const_k = 1 / 4;
+my $absent = 0;
 
 my %MetaCUIs = (
 	'C0332280' => 'Linkage concept',
@@ -75,15 +76,15 @@ my %MetaCUIs = (
 my @sources   = ();
 my @relations = ();
 my @directions = ();
+my @attributes = ();
 
 my $source;
 my $destination;
 my $tflag;
 my $verbose = 0;
 
-#open (LOG ,">", "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/log") or die "could not open log file";
 
-# This sub creates a new object of GetAllowablePaths
+# This sub creates a new object of MakeGraph
 
 =head2 new
 
@@ -99,15 +100,6 @@ sub new {
 }
 
 
-
-
-#sub memory_usage {
-#  my $t = new Proc::ProcessTable;
-#  foreach my $got ( @{$t->table} ) {
-#    next if not $got->pid eq $$;
-#    return $got->size;
-#  }
-#}
 
 
 
@@ -131,17 +123,22 @@ sub form_graph
 	my $s_ref   = shift;
 	my $r_ref   = shift;
 	my $d_ref   = shift;
+	my $a_ref   = shift;
 	my $regex   = shift;
 	my $test_flag = shift;
 
-
+	#my $rel_attribute = "due_to";
 
 	# Set the source and destination for use in other functions
 	
 	$source = $term1;
 	$destination = $term2;
 	$tflag = $test_flag;
+
+
+
 	
+	#my @candidate_siblings = ();
 	
 	# If this is a testing mode, then create an output file
 	if($test_flag == 1)
@@ -154,7 +151,6 @@ sub form_graph
 	
 	# Set up the directions hash using the directions and relations arrays
 	my %Directions = ();
-	#$Directions_ref = \%Directions;
 	
 	
 	msg( "\n in form graph : regex: $regex", $verbose );
@@ -167,7 +163,7 @@ sub form_graph
 		$Directions{$relations[$i]} = $directions[$i];
 	}
 
-	msg("\n in makegraph",$verbose);
+	#msg("\n in makegraph",$verbose);
 	
 	
 	#printHash(\%Directions);
@@ -184,8 +180,6 @@ sub form_graph
 
 	# Creating GetParents object to get back the parents of input terms.
 
-	#my $read_parents = WebService::UMLSKS::GetParents->new;
-
 	my @queue = ();
 
 	my $current_available_cost = 100000;
@@ -201,9 +195,15 @@ sub form_graph
 	push( @queue, $term1 );
 	push( @queue, $term2 );
 
-	#my $get_info  = WebService::UMLSKS::GetParents->new;
+	$Graph{$source}    = {};
+	$Graph{$destination} = {};
+	
+	
 	my $read_parents = WebService::UMLSKS::GetNeighbors->new;
-	my $get_paths    = WebService::UMLSKS::GetAllowablePaths->new;
+	
+	#my $get_paths    = WebService::UMLSKS::GetAllowablePaths->new;
+	
+	my $get_paths    = WebService::UMLSKS::GetAllowablePathsOld->new;
 
 	my $cost_upto_current_node = 0;
 	my $current_node           = "";
@@ -213,18 +213,20 @@ sub form_graph
 	my $counter             = 0;
 	my $change_in_direction = 0;
 	my @path_direction = ();
-	my $handle; # apparently this doesn't need to be anything at all
-	my $leaveCount = 0;
-
+	
+   # my $g = Graph::Directed->new; 
+	my $sibcount = 0;
+	my $sd = 0;
 	#until queue is empty
 	while ( $#queue != -1 ) {
 
-		
+		$sd++;
 		#print "inside while loop of queue , before poping element memory: ". memory_usage()/1024/1024 ."\n";
+		
 		@parents = ();
 		@sib     = ();
 		@children = ();
-		printQueue( \@queue );
+	#	printQueue( \@queue );
 
 		#printHoH(\%Graph);
 
@@ -237,65 +239,59 @@ sub form_graph
 		"\n current node : $current_node and cost till here : $cost_upto_current_node",
 			$verbose
 		);
-		if ( $cost_upto_current_node >= $current_available_cost - 10 ) {
+		if ( $cost_upto_current_node >= $current_available_cost - 10 || $cost_upto_current_node >= 150) {
 			msg( "\n ########\nIgnore node as it would lead to longer path",
 				$verbose );
 			next;
 		}
-		#my $enterCount = Devel::Leak::NoteSV($handle);
-		#print STDERR "ENTER: $enterCount SVs\n";
+
+		
+		
+		my %subgraph = %Graph;
+	
+		#msg("\n current node $current_node has a allowable shortest path from either source
+		 #or destination , so bring its neighbors from UMLS and them them to queue" , $verbose);
 		
 		my $neighbors_hash_ref =
 		  call_getconceptproperties( $current_node, $service );
 		  if ( $neighbors_hash_ref eq 'undefined' |
 			$neighbors_hash_ref eq 'empty' )
 		{
-			msg("\n no neighbors for $current_node",$verbose);
+			msg("\n no Info for $current_node",$verbose);
 			next;
 		}
 		
 		
-		##print "memory after calling webservice for $current_node: ". memory_usage()/1024/1024 ."\n";
-		#$leaveCount = Devel::Leak::CheckSV($handle);
-		#print STDERR "\nLEAVE: $leaveCount SVs\n";
+		#prints*"memory after calling webservice for $current_node: ". memory_usage()/1024/1024 ."\n";
+		
+		
 		
 		my $neighbors_info_ref =
-		  $read_parents->read_object( $neighbors_hash_ref, $current_node, $verbose,\%Directions );
+		  $read_parents->read_object( $neighbors_hash_ref, $current_node, $verbose,\%Directions,$a_ref);
 		  
-		##print "memory after calling read_object for $current_node: ". memory_usage()/1024/1024 ."\n";
+		#print "memory after calling read_object for $current_node: ". memory_usage()/1024/1024 ."\n";
 		
 		undef $neighbors_hash_ref;
 		
-		##print "memory after undef neighbors_hash: ". memory_usage()/1024/1024 ."\n";
+		#print "\n neighbors_hahs_ref after undef $neighbors_hash_ref";
+		
+		#print "memory after undef neighbors_hash: ". memory_usage()/1024/1024 ."\n";
 		
 		if (  $neighbors_info_ref eq 'empty' )
 		{
-			msg("\n no neighbors for $current_node",$verbose);
+			msg("\n no desired neighbors for $current_node",$verbose);
 			next;
 		}
 
 		if ( defined $neighbors_info_ref && @$neighbors_info_ref ) {
-			if ( $counter == 2 ) {
-				if ( $term1 eq $term2 ) {
-					
-					print OUTPUT "20<>$term1<>$term2\n";
-					print
-"\n Both the input terms share extra strong relation as they are same";
-					msg(
-"\n Both the input terms share extra strong relation as they are same",
-						$verbose
-					);
-					return 'same';
-				}
-			}
-
+			
 		   # For the graph using the parents, children and siblings of the term.
 			my @n = @$neighbors_info_ref;
 
 			
 			undef $neighbors_info_ref;
 			
-			##print "memory after undef neighbors info: ". memory_usage()/1024/1024 ."\n";	
+			#print "memory after undef neighbors info: ". memory_usage()/1024/1024 ."\n";	
 			my $p_ref = shift(@n);
 			my $c_ref = shift(@n);
 			my $s_ref = shift(@n);
@@ -314,66 +310,78 @@ sub form_graph
 				@sib = @{$s_ref};
 			}
 
-			msg( "\nparents array : @parents", $verbose );
-			msg( "\nchild array : @children",  $verbose );
-			msg( "\nsibling array : @sib",     $verbose );
+			$sibcount = $#sib;
 
-			#@parents = @$neighbors_info_ref;
+				
 			foreach my $p (@parents) {
 				unless ( $p ~~ %MetaCUIs ) {
 					$Graph{$current_node}{$p} = 1;
 					$Graph{$p}{$current_node} = 2;
+					#$g->add_edge($current_node,$p);
+					#$g->add_weighted_edge($p,$current_node, 2);
 				}
 			}
 			foreach my $c (@children) {
 				unless ( $c ~~ %MetaCUIs ) {
+					
 					$Graph{$current_node}{$c} = 2;
 					$Graph{$c}{$current_node} = 1;
+					#$g->add_edge($current_node,$c);
+					#$g->add_weighted_edge($c,$current_node, 1);
 				}
 			}
-			foreach my $s (@sib) {
-				unless ( $s ~~ %MetaCUIs ) {
-					$Graph{$current_node}{$s} = 3;
-					$Graph{$s}{$current_node} = 3;
+			if ( $#sib != -1 ) {
+				foreach my $s (0 .. $sibcount) {
+						
+					unless ( $sib[$s] ~~ %MetaCUIs ) {
+						
+						unless(exists $Graph{$current_node}{$sib[$s]}){
+							$Graph{$current_node}{$sib[$s]} = 3;
+						}
+						
+						unless(exists $Graph{$sib[$s]}{$current_node}){
+							$Graph{$sib[$s]}{$current_node} = 3;
+						}
+					#	$g->add_edge($current_node,$s);
+						#$g->add_weighted_edge($s,$current_node, 3);
+						
+					}
 				}
 			}
 		}
 
-		##print "memory after forming graph for $current_node: ". memory_usage()/1024/1024 ."\n";
+		#print "memory after forming graph for $current_node: ". memory_usage()/1024/1024 ."\n";
 		msg( "\n parents of $current_node : @parents",  $verbose );
 		msg( "\n siblings of $current_node : @sib",     $verbose );
-		msg( "\n children of $current_node: @children", $verbose );
+	#	msg( "\n children of $current_node: @children", $verbose );
 		if ( $#parents == -1 && $#sib == -1 && $#children == -1 ) {
 			msg("\n no neighbors at all",$verbose);
+			undef @parents;
+			undef @children;
+			undef @sib;
 			next;
 		}
 		else {
 			if ( $#parents != -1 ) {
 				foreach my $parent (@parents) {
-					msg( "\n parent is : $parent", $verbose );
+					#msg( "\n parent is : $parent", $verbose );
 					unless ( $parent ~~ %MetaCUIs ) {
 						unless ( $parent ~~ @visited ) {
-							msg("\n parent $parent not visited");
+							#msg("\n parent $parent not visited");
 							my $total_cost_till_parent =
 							  $cost_upto_current_node + $pcost;
 							if ( $parent ~~ %node_cost ) {
-								msg("\n $parent is already in node cost hash");
+								#msg("\n $parent is already in node cost hash");
 								if ( $node_cost{$parent} >
 									$total_cost_till_parent )
 								{
-									msg(
-"\n changing value of $parent in node cost hash",
-										$verbose
-									);
+								#	msg("\n changing value of $parent in node cost hash",$verbose);
 									$node_cost{$parent} =
 									  $total_cost_till_parent;
 								}
 							}
 							else {
-								msg(
-"\n parent $parent not in node hash, so add to hash and push in queue",
-									$verbose
-								);
+								#msg("\n parent $parent not in node hash, so add to hash and push in queue",	$verbose);
 								$node_cost{$parent} = $total_cost_till_parent;
 								push( @queue, $parent );
 
@@ -385,66 +393,68 @@ sub form_graph
 
 			}
 
+			my $check = 0;
 			if ( $#sib != -1 ) {
-				foreach my $sib (@sib) {
+				for my $s (0 .. $sibcount) {
+					
+					#msg("\t $sib[$s]",$verbose);
+					unless ( $sib[$s] ~~ %MetaCUIs ) {
+						unless ($sib[$s] ~~ @visited ) {
 
-					#print "\n sibling is : $sib";
-					unless ( $sib ~~ %MetaCUIs ) {
-						unless ( $sib ~~ @visited ) {
-
-							#print "\n sibling $sib not visited";
+							#msg ("\n sibling $sib not visited",$verbose);
 							my $total_cost_till_sib =
 							  $cost_upto_current_node + $scost;
-							if ( $sib ~~ %node_cost ) {
+							if ( $sib[$s] ~~ %node_cost ) {
 
-								#print "\n $sib is already in node cost hash";
-								if ( $node_cost{$sib} > $total_cost_till_sib ) {
+							#	msg( "\n $sib is already in node cost hash",$verbose);
+								if ( $node_cost{$sib[$s]} > $total_cost_till_sib ) {
 
-						   #print "\n changing value of $sib in node cost hash";
-									$node_cost{$sib} = $total_cost_till_sib;
+						   	#	msg("\n changing value of $sib in node cost hash",$verbose);
+									$node_cost{$sib[$s]} = $total_cost_till_sib;
 								}
 							}
 							else {
 
-		  #print
-		  #"\n sibling $sib not in node hash, so add to hash and push in queue";
-								$node_cost{$sib} = $total_cost_till_sib;
-								push( @queue, $sib );
-
+		  #msg("\n sibling $sib not in node hash, so add to hash and push in queue",$verbose);
+								$node_cost{$sib[$s]} = $total_cost_till_sib;
+								push( @queue, $sib[$s] );
+								#$check++;
 							}
 						}
 
 					}
 
+				
 				}
-
 			}
+
+			
 
 			if ( $#children != -1 ) {
 				foreach my $child (@children) {
-					msg( "\n child is : $child", $verbose );
+			#		msg( "\n child is : $child", $verbose );
 					unless ( $child ~~ %MetaCUIs ) {
 						unless ( $child ~~ @visited ) {
-							msg("\n child $child not visited");
+			#				msg("\n child $child not visited");
 							my $total_cost_till_child =
 							  $cost_upto_current_node + $ccost;
 							if ( $child ~~ %node_cost ) {
-								msg("\n $child is already in node cost hash");
+			#					msg("\n $child is already in node cost hash");
 								if ( $node_cost{$child} >
 									$total_cost_till_child )
 								{
-									msg(
-"\n changing value of $child in node cost hash",
-										$verbose
-									);
+			#						msg(
+#"\n changing value of $child in node cost hash",
+#										$verbose
+#									);
 									$node_cost{$child} = $total_cost_till_child;
 								}
 							}
 							else {
-								msg(
-"\n child $child not in node hash, so add to hash and push in queue",
-									$verbose
-								);
+#								msg(
+#"\n child $child not in node hash, so add to hash and push in queue",
+#									$verbose
+#								);
 								$node_cost{$child} = $total_cost_till_child;
 								push( @queue, $child );
 
@@ -458,6 +468,8 @@ sub form_graph
 
 		}
 
+
+		
 		#print "memory after updating node cost hash: ". memory_usage()/1024/1024 ."\n";
 		@queue = ();
 		foreach
@@ -474,21 +486,26 @@ sub form_graph
 		#		exit;
 		#	}
 
-		my %subgraph = %Graph;
+		#my %subgraph = %Graph;
+		%subgraph = %Graph;
 	
 		#print "memory after forming subgraph as copy of graph: ". memory_usage()/1024/1024 ."\n";	
-		#getinfo -> getGraph();
+		
 
-	#	@current_shortest_path = ();
-	#		@path_direction = ();
+		#@current_shortest_path = ();
+		#@path_direction = ();
 
+		
+		msg ("\n Check if a shortest allowable path exists between source and destination",$verbose);
 	  # Check if a shortest allowable path exists between source and destination
 		my $get_path_info_result =
 		  $get_paths->get_shortest_path_info( \%subgraph, $term1, $term2,
 			$verbose, $regex );
+		
 		#print "memory after calling get paths: ". memory_usage()/1024/1024 ."\n";	
 			undef %subgraph;
 			%subgraph = ();
+		
 		#print "memory after undef subgraph: ". memory_usage()/1024/1024 ."\n";	
 		if ( $get_path_info_result != -1 && $get_path_info_result != -2 ) {
 			my @path_info = @$get_path_info_result;
@@ -499,22 +516,25 @@ sub form_graph
 			$final_cost = $current_available_cost;
 			
 			my $continue_searching = 0;
-			foreach my $key (keys %Directions){
-				if($Directions{$key} eq "H")
-				{
-					msg("This test has horizontal relation so, finding better path",$verbose);
-					$continue_searching = 1;
-				}
-			}
+			#foreach my $key (keys %Directions){
+			#	if($Directions{$key} eq "H")
+			#	{
+			#		msg("\n This test has horizontal relation so, finding better path",$verbose);
+			#		$continue_searching = 1;
+			#	}
+			#}
 			
-			if($continue_searching == 0){
+			#if($continue_searching == 0){
 				last;
-			}
+			#}
 			
 			
 		}
 		if($get_path_info_result == -2)
 		{
+			# Stop seraching for shortest path as the path length has already increased
+			# the threshold value.
+	
 			if(@current_shortest_path)
 			{
 				msg( "\n Stopped searching as the path length exceeds the threshold value", $verbose);
@@ -529,24 +549,18 @@ sub form_graph
 				}
 				last;
 			}
-			# Stop seraching for shortest path as the path length has already increased
-			# the threshold value.
-			
-			
-			
-			
 			
 			
 		}
 	
 
 		
-		msg( "\n current shortest path : @current_shortest_path", $verbose );
+		#msg( "\n current shortest path between source and dest : @current_shortest_path", $verbose );
 
-		msg( "\n current available path cost : $current_available_cost",
-			$verbose );
-		msg( "\n current available path direction : @path_direction",
-			$verbose );	
+		#msg( "\n current available path cost between source and destination : $current_available_cost",
+		#	$verbose );
+		#msg( "\n current available path direction between source and dest: @path_direction",
+		#	$verbose );	
 
 	}
 
@@ -554,13 +568,25 @@ sub form_graph
 	if (@current_shortest_path) {
 		
 		undef %Graph;
+		#undef $g;
 		undef %node_cost;
 		#print "memory after undef graph and node cost: ". memory_usage()/1024/1024 ."\n";
 		my %Concept = %$WebService::UMLSKS::GetNeighbors::ConceptInfo_ref;
 		
 		undef ${WebService::UMLSKS::GetNeighbors::ConceptInfo_ref};
-		#print "memory after undef concept info ref: ". memory_usage()/1024/1024 ."\n";
+		#print "memory after undef graph, concept_ref and node cost: ". memory_usage()/1024/1024 ."\n";
+		
+		##print "memory after undef concept info ref: ". memory_usage()/1024/1024 ."\n";
 		my $initial_relatedness =  $const_C - ($final_cost/10);
+		
+		
+		#open(OUT,">>","inter_output.txt") or die("Error: cannot open file 'inter_output.txt'\n");
+		
+		#print OUT "$initial_relatedness $change_in_direction\n";
+		#close OUT;
+		if($change_in_direction == -1){
+			$change_in_direction = 0;
+		}
 		my $semantic_relatedness = $initial_relatedness -
 						(($const_k * $initial_relatedness) * $change_in_direction);
 
@@ -590,6 +616,13 @@ sub form_graph
 
 		print "\n Semantic relatedness : $semantic_relatedness";
 		msg( "\n Semantic relatednes : $semantic_relatedness", $verbose );
+			
+		my @months = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
+		my @weekDays = qw(Sun Mon Tue Wed Thu Fri Sat Sun);
+		my ($second, $minute, $hour, $dayOfMonth, $month, $yearOffset, $dayOfWeek, $dayOfYear, $daylightSavings) = localtime();
+		my $year = 1900 + $yearOffset;
+		my $theTime = "$hour:$minute:$second, $weekDays[$dayOfWeek] $months[$month] $dayOfMonth, $year";
+		msg ("\n $theTime",$verbose);
 		if($test_flag == 1)
 		{
 			print OUTPUT "$semantic_relatedness<>$term1<>$term2\n";
@@ -601,20 +634,22 @@ sub form_graph
 	else
 
 	{
-		if($test_flag == 1)
+		undef %Graph;
+		undef %node_cost;
+		# Check if this is testing mode and if the CUI does not exist.
+		if($test_flag == 1 && $absent != 1)
 		{
 			print OUTPUT "-1<>$term1<>$term2\n";
 		}
 		print "\n No shortest allowable path found between the input terms/CUIs\n";
 	}
 
-	#print "\n the parents are @parents";
-	#print "\n siblings are @sib";
-if($test_flag == 1){
-	close OUTPUT;
-}
+		
+	if($test_flag == 1){
+		close OUTPUT;
+	}
 
-#print "memory at end of form graph: ". memory_usage()/1024/1024 ."\n";
+#msg("memory at end of form graph: ". memory_usage()/1024/1024 ."\n",$verbose);
 	
 }
 
@@ -627,9 +662,9 @@ This subroutines prints the current contents of queue
 	sub printQueue {
 		my $q_ref = shift;
 		my @queue = @$q_ref;
-		msg( ("\nCurrent Queue is: \n "), $verbose );
+		#msg( ("Current Queue is: "), $verbose );
 		foreach my $ele (@queue) {
-			msg( "\t$ele, $node_cost{$ele}", $verbose );
+			#msg( " $ele, $node_cost{$ele}", $verbose );
 		}
 	}
 
@@ -645,6 +680,11 @@ This subroutines queries webservice getConceptProperties
 		my $service = shift;
 		my $parents_ref;
 
+		$counter ++;
+		open(COUNT,">>","count.txt") or die("Error: cannot open file 'count.txt'\n");
+		
+		
+		print COUNT "\n call $counter : $cui ";
    # Creating object of query and passing the method name along with parameters.
 
 		my $query = WebService::UMLSKS::Query->new;
@@ -667,26 +707,17 @@ This subroutines queries webservice getConceptProperties
 		   # use SOAP::Data->type in order to prevent
 		   # UTF-8 strings from being encoded into base64
 		   # http://cookbook.soaplite.com/#internationalization%20and%20encoding
-				CUI => SOAP::Data->type( string => $cui ),
-
-				# CUI => "asfa",
+				CUI => SOAP::Data->type( string => $cui ),				
 				language => 'ENG',
 				release  => '2010AB',
-
 				SABs => [ (@sources) ],
-
-				#SABs => [qw( SNOMEDCT )],
 				includeConceptAttrs  => 'false',
 				includeSemanticTypes => 'false',
 				includeTerminology   => 'false',
-
-				#includeDefinitions   => 'true',
 				includeSuppressibles => 'false',
-
 				includeRelations => 'true',
 				relationTypes    => [(@relations)],
-				#relationTypes    =>  ['PAR','RN'],
-				#relationTypes    => [ 'PAR', 'CHD', 'RB', 'RN' ],
+				#relationTypes    =>  ['PAR','RN'],				
 			},
 		);
 
@@ -702,6 +733,7 @@ This subroutines queries webservice getConceptProperties
 			
 				if($tflag == 1)
 				{
+					$absent = 1;
 					open(OUT,">>","output.txt") or die("Error: cannot open file 'output.txt'\n");
 					print OUTPUT "-1<>$source<>$destination\n";
 					close OUT;
@@ -713,7 +745,6 @@ This subroutines queries webservice getConceptProperties
 		}
 		else {
 
-#$parents_ref = $return_ref;#changed parents_ref to return_ref due to "odd" error
 			return $return_ref;
 		}
 
@@ -760,7 +791,7 @@ undef @directions;
 
 =head1 SEE ALSO
 
-ValidateTerm.pm  GetUserData.pm  Query.pm  ws-getUMLSInfo.pl 
+ValidateTerm.pm  GetUserData.pm  Query.pm  ws-getUMLSInfo.pl MakeGraph.pm GetAllowablePath.pm
 
 =cut
 

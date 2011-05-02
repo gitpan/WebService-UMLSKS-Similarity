@@ -51,6 +51,9 @@ my @children;
 my @siblings;
 my $indentation;
 my $verbose = 0;
+my @attribute = ();
+my @relationattr = ();
+
 
 #print "\n in format hash";
 	#my %directions =  %$WebService::UMLSKS::MakeGraph::Directions_ref;
@@ -89,14 +92,52 @@ sub read_object {
 	my $qterm = shift;
 	my $ver = shift;
 	my $directions_ref = shift;
-	$verbose = $ver;
+	my $attribute_ref = shift;
 	
+	$verbose = $ver;
 	 %directions = %$directions_ref;
-	 printHash(\%directions);
+	# printHash(\%directions);
+
+
+	# If the attributes are specified, then set the relations and relation attributes.
+
+	if(@$attribute_ref){
+		
+		foreach my $attr (@$attribute_ref){
+			$attr =~ /(.*?)\s*-\s*(.*)$/;
+			my $rel = $1;
+			my $att = $2;
+			$att =~ s/\s*//g;
+			$rel =~ s/\s*//g;
+			
+			
+			
+			# If this relation is in directions
+			if($rel ~~ %directions){
+				unless($rel ~~ @relationattr){
+					push(@relationattr,$rel);
+				}
+				unless($att ~~ @attribute){
+					push(@attribute,$att);
+				}
+				
+			}
+		}
+		
+		
+	}
+
+	undef @parents;
+	undef @children;
+	undef @siblings;
+	
 	@parents = ();
 	@children = ();
 	@siblings = ();
-	
+	        
+	        
+	msg ("\t relation for which atttributes are specified : @relationattr",$verbose);
+	msg ("\t attribues are : @attribute",$verbose);         
 	my @neighbors = ();
 	
 	#my $return_ref =
@@ -128,7 +169,7 @@ sub read_object {
 		push(@neighbors,"empty");
 	}
 	if(defined $siblings_ref){
-		#print "\n parents are @unique";
+		#print "\n siblings are @$siblings_ref";
 		push(@neighbors,$siblings_ref);
 	}
 	else{
@@ -136,7 +177,7 @@ sub read_object {
 		push(@neighbors,"empty");
 	}
 	
-	#undef $object_refr;
+	undef $object_refr;
 	return \@neighbors;
 	
 }
@@ -267,17 +308,31 @@ sub format_homogeneous_hash {
 	my $q_cui;
 	my $q_term;
 	my $relation;
+	my $roflag = 0;
+	my $relflag = 0;
+	my $accept_rela  = 1;
 	
 	
-	
-	
-	foreach my $att (keys %$hash_ref) {		
+	foreach my $att (keys %$hash_ref) {
+		
 		if ( $att =~ /\brel\b/) {
 				if(defined $hash_ref->{$att})
 				{
 					if($hash_ref->{$att} ~~ %directions){
-						msg( "\n got relation $att : $hash_ref->{$att}", $verbose);
-						$flag = 1;
+						if($hash_ref->{$att} ~~ @relationattr)
+						{
+							
+							$roflag = 1;
+							#print "\n roflag : $roflag";
+							$flag = 0;
+							
+						}
+						else{
+							#msg( "\n got relation $att : $hash_ref->{$att}", $verbose);
+							$flag = 1;
+							
+							
+						}
 						$relation = $hash_ref->{$att};
 						
 					}
@@ -288,17 +343,34 @@ sub format_homogeneous_hash {
 					
 				}
 		}
-		if ( $flag == 1 ) {
+		
+		if ( $flag == 1 || $roflag == 1 ) {
 			if($att =~ /CN/){
 				#print " \n got term , $att : $hash_ref->{$att}";
 				$current_term = $hash_ref->{$att};
 				$t_flag       = 1;
 				
 			}
-			else{
-				if($t_flag == 1){
+			if($roflag == 1 && $att =~ /\brelA\b/){
+				if($hash_ref->{$att} ~~ @attribute){  
+					#|\bfinding_site_of\b|\bhas_finding_site\b|\bhas_severity\b|severity_of|has_episodicity\b|\bepisodicity_of
+					$relflag  = 1;
+					#print " \n got rela , $att : $hash_ref->{$att}, relflag : $relflag";
+				}
+			}
+			
+				if($roflag == 1 && $relflag == 0)
+				{
+					#print "\n not the rela I want";
+					$accept_rela = 0;
+				}
+				if($roflag == 1 && $relflag == 1){
+					$accept_rela = 1;
+				}
+				if($t_flag == 1 && $accept_rela == 1){
+					#print "\n yehhhhhh got the rela I want";
 					if(defined $hash_ref->{$att}){
-					if($hash_ref->{$att} =~ /^C/){
+					if($hash_ref->{$att} =~ /^C[0-9]/){
 							
 							$current_cui = $hash_ref->{$att};
 							if(defined $current_cui){ #c 1
@@ -312,13 +384,13 @@ sub format_homogeneous_hash {
 									if($directions{$relation} eq "U")
 									{
 										push(@parents, $current_cui);
-										msg( " \n inserting in parent , relation is $relation $current_cui : $current_term",$verbose);
+									#	msg( " \n inserting in parent , relation is $relation $current_cui : $current_term",$verbose);
 										#print " \n inserting in parents $current_cui : $current_term";
 									}
 									elsif($directions{$relation} eq "D")
 									{
 										push(@children, $current_cui);
-									msg( " \n inserting in children , relation is $relation $current_cui : $current_term",$verbose);
+									#msg( " \n inserting in children , relation is $relation $current_cui : $current_term",$verbose);
 										
 									}
 									elsif($directions{$relation} eq "H")
@@ -331,9 +403,8 @@ sub format_homogeneous_hash {
 							}
 					}
 					}
-		
 				}
-			}
+			
 		}
 		
 		if ( $att =~ /CN/ ) {				
@@ -402,7 +473,8 @@ sub extract_object_class {
 	} else {
 		$res = $object_ref;
 	}
-
+	
+	
 	return $res;
 }
 
