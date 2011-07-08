@@ -1,4 +1,3 @@
-bin/count.txt
 bin/ws-getAllowablePath.pl
 bin/ws-getUMLSInfo.pl
 bin/ws-sample.pl
