@@ -153,7 +153,7 @@ and password and getting back a proxy ticket.
 
 =item package ValidateTerm
 
-sub ValidateCUI::validateTerm to accepts an input and validates it 
+sub ValidateTerm::validateTerm to accepts an input and validates it 
 for as valid or invalid CUI or a term.
 
 =item package GetUserData
@@ -803,7 +803,7 @@ undef @directions;
 
 =head1 SEE ALSO 
 
-ValidateCUI.pm  GetUserData.pm  Query.pm  ConnectUMLS.pm 
+ValidateTerm.pm  GetUserData.pm  Query.pm  ConnectUMLS.pm 
 
 =cut
 

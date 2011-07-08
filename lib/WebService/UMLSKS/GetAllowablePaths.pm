@@ -6,6 +6,7 @@ WebService::UMLSKS::GetAllowablePaths - Get an allowable shortest path between t
 
 =head2 Basic Usage
 
+
     use WebService::UMLSKS::GetAllowablePaths;
 
     
@@ -45,7 +46,7 @@ use WebService::UMLSKS::GetNeighbors;
 
 
 
-package WebService::UMLSKS::GetAllowablePathsOld;
+package WebService::UMLSKS::GetAllowablePaths;
 
 my $pcost = 10;
 my $scost = 20;

@@ -415,7 +415,7 @@ while ( $continue == 1 ) {
 # runQuery returns undefined value if the entered term does not exist in the UMLS database.
 			
 			if (!$cui) {
-				print "Term/CUI does not exist.";
+				print "Term/CUI does not exist in currently configured sources.";
 				next;
 			}
 
@@ -424,7 +424,7 @@ while ( $continue == 1 ) {
 
 			else {
 				if ( $cui =~ /empty|undefined/ ) { # change made , added undefined to return values of run query
-					print "\nThere is no information for your input in UMLS.";
+					print "\nThere is no information for your input in UMLS using current configuaration.";
 					next;
 				}
 				else {
@@ -483,7 +483,7 @@ while ( $continue == 1 ) {
 			
 			else
 			{
-				print "\nThere is no information for your input in UMLS.";
+				print "\nThere is no information for your input in UMLS using current configuaration.";
 			}
 				
 		}

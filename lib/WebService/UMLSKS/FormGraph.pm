@@ -36,8 +36,8 @@ use strict;
 no warnings qw/redefine/;    #http://www.perlmonks.org/?node_id=582220
 
 
-#use WebService::UMLSKS::GetAllowablePaths;
-use WebService::UMLSKS::GetAllowablePathsOld;
+#use WebService::UMLSKS::GetAllowablePaths; changed name of getallowablepathsold
+use WebService::UMLSKS::GetAllowablePaths;
 use WebService::UMLSKS::GetNeighbors;
 use WebService::UMLSKS::Query;
 use WebService::UMLSKS::ConnectUMLS;
@@ -203,7 +203,7 @@ sub form_graph
 	
 	#my $get_paths    = WebService::UMLSKS::GetAllowablePaths->new;
 	
-	my $get_paths    = WebService::UMLSKS::GetAllowablePathsOld->new;
+	my $get_paths    = WebService::UMLSKS::GetAllowablePaths->new;
 
 	my $cost_upto_current_node = 0;
 	my $current_node           = "";

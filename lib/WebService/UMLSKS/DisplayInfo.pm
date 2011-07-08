@@ -224,7 +224,7 @@ sub format_homogeneous_hash {
 						# if content_ref is empty
 
 						print
-"\n\tThere are no definitions available for your query term/CUI in database.";
+"\n\tThere are no definitions available for your query term/CUI in UMLS using current configuaration.";
 
 					}
 				}
