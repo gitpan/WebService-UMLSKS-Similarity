@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               WebService-UMLSKS-Similarity
-version:            0.17
+version:            0.18
 abstract:           access the Unified Medical Language System (UMLS) via Webservices
 author:
     - Mugdha Choudhari <choudhary.mugdha@gmail.com> , Ted Pedersen <tpederse@d.umn.edu>

@@ -98,11 +98,11 @@ This program uses following packages:
 
 =over
  
-=item package Connect
+=item package ConnectUMLS
 
-->sub Connect::get_pt to get the proxy ticket using a web service.
+->sub ConnectUMLS::get_pt to get the proxy ticket using a web service.
 
-->sub Connect::connect_umls to connect to UMLS by sending username 
+->sub ConnectUMLS::connect_umls to connect to UMLS by sending username 
 and password and getting back a proxy ticket.
 
 =item package ValidateTerm

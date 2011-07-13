@@ -3,7 +3,6 @@ bin/ws-getUMLSInfo.pl
 bin/ws-sample.pl
 bin/ws-test.pl
 Changes
-config
 GPL.txt
 ignore.txt
 lib/WebService/UMLSKS/ConnectUMLS.pm

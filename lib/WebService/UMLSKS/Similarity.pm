@@ -13,11 +13,11 @@ WebService::UMLSKS::Similarity - access the Unified Medical Language System (UML
 
 =head1 VERSION
 
-Version 0.16
+Version 0.18
 
 =cut
 
-our $VERSION = '0.17';
+our $VERSION = '0.18';
 
 =head1 SYNOPSIS
 
@@ -284,7 +284,7 @@ sub initialiseParameters {
 
 =head1 SEE ALSO
 
-ValidateTerm.pm  GetUserData.pm   ConnectUMLS.pm  ws-getUMLSInfo.pl ws-getShortestPath.pl
+ValidateTerm.pm  GetUserData.pm   ConnectUMLS.pm  ws-getUMLSInfo.pl ws-getAllowablePath.pl
 
 =cut
 

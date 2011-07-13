@@ -5,7 +5,7 @@
 
 =head1 NAME
 
-ws-getShortestPath
+ws-getAllowablePath
 
 =cut
 
@@ -17,7 +17,7 @@ ws-getShortestPath
 
 =pod
 
-perl ws-getShortestPath.pl --verbose 1 -sources SNOMEDCT,MSH --rels PAR --dirs U --config configfilename --login loginfile --patterns patternsfile --testfile test_file
+perl ws-getAllowablePath.pl --verbose 1 -sources SNOMEDCT,MSH --rels PAR --dirs U --config configfilename --login loginfile --patterns patternsfile --testfile test_file
 
 --verbose: Sets verbose flag to true if value is set to 1, and thus displays all the authentication information for the user.
 
@@ -86,6 +86,9 @@ Right now, the vector length of any size is allowed in the allowed direction,
 For example, 
 
 \b1+\b : means a path which consists of one or more than one upward arrows is allowed. 
+
+--testfile : User can specify the list of test CUIs stored in the test_file throught this option.
+The program would generate output for all the CUI pairs sequentially.
 
 Follwing is a sample output
 
@@ -165,9 +168,9 @@ sub GetUserData::getUserDetails to get username and password from the user.
 sub Query::runQuery which takes method name, service and other parameters as argument and calls the web service. 
 It also displays the information received from the web service and other error messages. 
 
-=item package MakeGraph
+=item package FormGraph
 
-sub MakeGraph::form_graph forms graph using standard BFS algorithm and creates a graph
+sub FormGraph::form_graph forms graph using standard BFS algorithm and creates a graph
 using the concepts and their neighbor concepts. It finds shortest path between two
 input concepts and displays the path. 
 
@@ -182,6 +185,7 @@ input concepts and displays the path.
 
 ###############################################################################
 ##########  CODE STARTS HERE  #################################################
+
 #use lib "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/lib";
 
 use strict;
@@ -193,9 +197,7 @@ use WebService::UMLSKS::ValidateTerm;
 use WebService::UMLSKS::Query;
 use WebService::UMLSKS::ConnectUMLS;
 use WebService::UMLSKS::Similarity;
-#use WebService::UMLSKS::MakeGraph;
 use WebService::UMLSKS::GetCUIs;
-#use WebService::UMLSKS::GetAllowableShortestPath;
 use WebService::UMLSKS::FormGraph;
 use Log::Message::Simple qw[msg error debug];
 
@@ -268,6 +270,7 @@ if($log_file ne '' && $verbose eq '')
 if(defined $config_file && $config_file ne "")
 {
 	 $similarity = WebService::UMLSKS::Similarity->new({"config" => $config_file});
+	# print "\n creating  object of similarity with config file";
 	msg("\n creating  object of similarity with config file", $verbose);
 }
 
@@ -358,7 +361,7 @@ my @querylist2 = ();
 
 msg("\n sources:@sources rels:@relations and dirs:@directions and attributes : @attributes", $verbose);
 
-# If this is a testing mode, then setr continue to length of the file i.e. number of rows
+# If this is a testing mode, then set continue to length of the file i.e. number of rows
 
 if($input1 ne "" && $input2 ne "")
 {
@@ -537,7 +540,8 @@ else
    # Here 1, denotes upward arrow/vector, 2 denotes downward arrow and 3 denoted
    # horizontal arrows.
 	
-   $allowable_pattern_regex = '\b1+\b|\b1+2+\b|\b1+3+\b|\b1+3+2+\b|\b2+\b|\b2+3+\b|\b3+2+\b|\b3+\b';
+   #$allowable_pattern_regex = '\b1+\b|\b1+2+\b|\b1+3+\b|\b1+3+2+\b|\b2+\b|\b2+3+\b|\b3+2+\b|\b3+\b';
+    $allowable_pattern_regex = '\bU+\b|\bU+D+\b|\bU+H+\b|\bU+H+D+\b|\bD+\b|\bD+H+\b|\bH+D+\b|\bH+\b';
 }
 
 
@@ -558,10 +562,8 @@ my $c = WebService::UMLSKS::ConnectUMLS->new;
 
 my $get_CUIs = WebService::UMLSKS::GetCUIs->new;
 
-# Creating object of MakeGraph
+# Creating object of FormGraph
 
-#my $form_graph = WebService::UMLSKS::MakeGraph->new;
-#my $form_graph = WebService::UMLSKS::GetAllowableShortestPath->new;
 my $form_graph = WebService::UMLSKS::FormGraph->new;
 
 my $proxy_ticket = $c->get_pt();

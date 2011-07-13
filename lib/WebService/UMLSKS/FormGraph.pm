@@ -1,14 +1,13 @@
 
 =head1 NAME
 
-WebService::UMLSKS::MakeGraph - Form a graph by accepting parents and siblings from UMLS.
-
+WebService::UMLSKS::FormGraph - Form a graph by accepting parents and siblings from UMLS.
 
 =head1 SYNOPSIS
 
 =head2 Basic Usage
 
-    use WebService::UMLSKS::MakeGraph;
+    use WebService::UMLSKS::FormGraph;
 
 =head1 DESCRIPTION
 
@@ -23,7 +22,7 @@ The subroutines are as follows:
 ###############################################################################
 ##########  CODE STARTS HERE  #################################################
 
-# This module has package  MakeGraph
+# This module has package  FormGraph
 
 # Author  : Mugdha Choudhari
 
@@ -84,11 +83,11 @@ my $tflag;
 my $verbose = 0;
 
 
-# This sub creates a new object of MakeGraph
+# This sub creates a new object of FormGraph
 
 =head2 new
 
-This sub creates a new object of MakeGraph.
+This sub creates a new object of FormGraph.
 
 =cut
 
@@ -163,7 +162,7 @@ sub form_graph
 		$Directions{$relations[$i]} = $directions[$i];
 	}
 
-	#msg("\n in makegraph",$verbose);
+	#msg("\n in FormGraph",$verbose);
 	
 	
 	#printHash(\%Directions);
@@ -176,7 +175,7 @@ sub form_graph
 	%node_cost = ();
 	%Graph     = ();
 
-	msg( "\nin makegraph Term1 : $term1 , Term2: $term2", $verbose );
+	msg( "\nin FormGraph Term1 : $term1 , Term2: $term2", $verbose );
 
 	# Creating GetParents object to get back the parents of input terms.
 
@@ -201,7 +200,6 @@ sub form_graph
 	
 	my $read_parents = WebService::UMLSKS::GetNeighbors->new;
 	
-	#my $get_paths    = WebService::UMLSKS::GetAllowablePaths->new;
 	
 	my $get_paths    = WebService::UMLSKS::GetAllowablePaths->new;
 
@@ -215,7 +213,7 @@ sub form_graph
 	my @path_direction = ();
 	
    # my $g = Graph::Directed->new; 
-	my $sibcount = 0;
+	my $sibcount = 20; # only take first 20 neighbors
 	my $sd = 0;
 	#until queue is empty
 	while ( $#queue != -1 ) {
@@ -233,12 +231,12 @@ sub form_graph
 		my $current_node = shift(@queue);
 		$counter++;
 		push( @visited, $current_node );
-		msg( "\n visited : @visited", $verbose );
+		#msg( "\n visited : @visited", $verbose );
 		my $cost_upto_current_node = $node_cost{$current_node};
-		msg(
-		"\n current node : $current_node and cost till here : $cost_upto_current_node",
-			$verbose
-		);
+		#msg(
+		#"\n current node : $current_node and cost till here : $cost_upto_current_node",
+		#	$verbose
+		#);
 		if ( $cost_upto_current_node >= $current_available_cost - 10 || $cost_upto_current_node >= 150) {
 			msg( "\n ########\nIgnore node as it would lead to longer path",
 				$verbose );
@@ -310,13 +308,19 @@ sub form_graph
 				@sib = @{$s_ref};
 			}
 
-			$sibcount = $#sib;
+			#$sibcount = $#sib; # keep all the neighbors
+			
+			# Check if sibcount is greater than actual #siblings, if yes,
+			# take actual siblings.
+			if($sibcount > $#sib){
+				$sibcount = $#sib;
+			}
 
 				
 			foreach my $p (@parents) {
 				unless ( $p ~~ %MetaCUIs ) {
-					$Graph{$current_node}{$p} = 1;
-					$Graph{$p}{$current_node} = 2;
+					$Graph{$current_node}{$p} = 'U';
+					$Graph{$p}{$current_node} = 'D';
 					#$g->add_edge($current_node,$p);
 					#$g->add_weighted_edge($p,$current_node, 2);
 				}
@@ -324,8 +328,8 @@ sub form_graph
 			foreach my $c (@children) {
 				unless ( $c ~~ %MetaCUIs ) {
 					
-					$Graph{$current_node}{$c} = 2;
-					$Graph{$c}{$current_node} = 1;
+					$Graph{$current_node}{$c} = 'D';
+					$Graph{$c}{$current_node} = 'U';
 					#$g->add_edge($current_node,$c);
 					#$g->add_weighted_edge($c,$current_node, 1);
 				}
@@ -336,11 +340,12 @@ sub form_graph
 					unless ( $sib[$s] ~~ %MetaCUIs ) {
 						
 						unless(exists $Graph{$current_node}{$sib[$s]}){
-							$Graph{$current_node}{$sib[$s]} = 3;
+							$Graph{$current_node}{$sib[$s]} = 'H';
 						}
 						
 						unless(exists $Graph{$sib[$s]}{$current_node}){
-							$Graph{$sib[$s]}{$current_node} = 3;
+							#$Graph{$sib[$s]}{$current_node} = 3 ;
+							$Graph{$sib[$s]}{$current_node} = 'H' ;
 						}
 					#	$g->add_edge($current_node,$s);
 						#$g->add_weighted_edge($s,$current_node, 3);
@@ -626,6 +631,7 @@ sub form_graph
 		if($test_flag == 1)
 		{
 			print OUTPUT "$semantic_relatedness<>$term1<>$term2\n";
+			print STDERR "final output :$semantic_relatedness<>$term1<>$term2\n";
 		}
 		
 		
@@ -640,6 +646,7 @@ sub form_graph
 		if($test_flag == 1 && $absent != 1)
 		{
 			print OUTPUT "-1<>$term1<>$term2\n";
+			print STDERR "final output :-1<>$term1<>$term2\n";
 		}
 		print "\n No shortest allowable path found between the input terms/CUIs\n";
 	}
@@ -736,6 +743,7 @@ This subroutines queries webservice getConceptProperties
 					$absent = 1;
 					open(OUT,">>","output.txt") or die("Error: cannot open file 'output.txt'\n");
 					print OUTPUT "-1<>$source<>$destination\n";
+					print STDERR "final output :-1<>$source<>$destination\n";
 					close OUT;
 				}
 							
@@ -791,7 +799,7 @@ undef @directions;
 
 =head1 SEE ALSO
 
-ValidateTerm.pm  GetUserData.pm  Query.pm  ws-getUMLSInfo.pl MakeGraph.pm GetAllowablePath.pm
+ValidateTerm.pm  GetUserData.pm  Query.pm  ws-getUMLSInfo.pl FormGraph.pm GetAllowablePath.pm
 
 =cut
 

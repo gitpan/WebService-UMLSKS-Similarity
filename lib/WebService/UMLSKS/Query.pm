@@ -21,7 +21,7 @@ WebService::UMLSKS::Query - Query UMLS web services with the query arguments lik
 			casTicket => $c->get_pt(),
 			searchString => SOAP::Data->type(string => $term),
 			language     => 'ENG',
-			release      => '2009AA',
+			release      => '2010AA',
 			includeSuppressibles => 'false',
 		},
 	);
@@ -251,7 +251,7 @@ sub SOAP::Serializer::as_TermGroup {
 
 =head1 SEE ALSO
 
-ValidateTerm.pm  GetUserData.pm   ConnectUMLS.pm  ws-getUMLSInfo.pl ws-getShortestPath.pl
+ValidateTerm.pm  GetUserData.pm   ConnectUMLS.pm  ws-getUMLSInfo.pl ws-getAllowablePath.pl
 
 =cut
 

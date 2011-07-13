@@ -1,5 +1,55 @@
 #!/usr/bin/env perl
 
+
+#---------------------------PERLDOC STARTS HERE------------------------------------------------------------------
+
+=head1 NAME
+
+ws-sample
+
+=cut
+
+#---------------------------------------------------------------------------------------------------------------------
+
+=head1 SYNOPSIS
+
+=head2 Basic Usuage
+
+=pod
+
+perl ws-sample.pl
+
+Follwing is a sample output
+
+=over
+
+=item Enter username to connect to UMLSKS:mchoudhari
+
+=item Enter password: 
+
+=item Enter query term : hair
+
+=item CUI for term hair is : C0018494
+
+=back
+
+
+=head1 DESCRIPTION
+
+This a sample program which shows the flow of the complete package and how different modules interact with each other.
+This program authenticates user by asking for valid username and password to connect to UMLSKS. Once the user is 
+authenticated program takes a term from the user and finds CUI using the UMLSKS Metathesaurus database. The program queries SNOMED-CT database.
+
+=cut
+
+#---------------------------------------------------------------------------------------------------------------------------
+
+#------------------------------PERLDOC ENDS HERE------------------------------------------------------------------------------
+
+
+
+
+
 #Program that connects to UMLSKS and queries the UMLS through the UMLSKS API to return information for an entered term or CUI.
 
 # Author :			 Mugdha
@@ -68,7 +118,7 @@ print "\nEnter query term:";
 		   # http://cookbook.soaplite.com/#internationalization%20and%20encoding
 					searchString => SOAP::Data->type( string => $term ),
 					language     => 'ENG',
-					release      => '2009AA',
+					release      => '2010AA',
 					SABs => [qw(SNOMEDCT)],
 					includeSuppressibles => 'false',
 				},
@@ -89,3 +139,50 @@ sub SOAP::Serializer::as_ArrayOf_xsd_string {
 	my ( $self, $value, $name, $type, $attr ) = @_;
 	return [ $name, { 'xsi:type' => 'array', %$attr }, $value ];
 }
+
+
+
+#-------------------------------PERLDOC STARTS HERE-------------------------------------------------------------
+
+
+=head1 SEE ALSO 
+
+getAllowablePath.pl  GetUserData.pm  Query.pm  ConnectUMLS.pm getUMLSInfo.pl 
+
+=cut
+
+
+=head1 AUTHORS
+
+Mugdha Choudhari             University of Minnesota Duluth
+                             E<lt>chou0130 at d.umn.eduE<gt>
+
+Ted Pedersen,                University of Minnesota Duluth
+                             E<lt>tpederse at d.umn.eduE<gt>
+
+
+
+
+=head1 COPYRIGHT
+
+Copyright (C) 2010, Mugdha Choudhari, Ted Pedersen
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to 
+The Free Software Foundation, Inc., 
+59 Temple Place - Suite 330, 
+Boston, MA  02111-1307, USA.
+
+=cut
+
+#---------------------------------PERLDOC ENDS HERE---------------------------------------------------------------

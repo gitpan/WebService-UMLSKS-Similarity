@@ -56,7 +56,7 @@ my @relationattr = ();
 
 
 #print "\n in format hash";
-	#my %directions =  %$WebService::UMLSKS::MakeGraph::Directions_ref;
+	#my %directions =  %$WebService::UMLSKS::FormGraph::Directions_ref;
 	
 	#$directions{"PAR"} = "U";
 	#$directions{"CHD"} = "D";
@@ -136,8 +136,8 @@ sub read_object {
 	@siblings = ();
 	        
 	        
-	msg ("\t relation for which atttributes are specified : @relationattr",$verbose);
-	msg ("\t attribues are : @attribute",$verbose);         
+	#msg ("\t relation for which atttributes are specified : @relationattr",$verbose);
+	#msg ("\t attribues are : @attribute",$verbose);         
 	my @neighbors = ();
 	
 	#my $return_ref =
@@ -353,7 +353,7 @@ sub format_homogeneous_hash {
 			}
 			if($roflag == 1 && $att =~ /\brelA\b/){
 				if($hash_ref->{$att} ~~ @attribute){  
-					#|\bfinding_site_of\b|\bhas_finding_site\b|\bhas_severity\b|severity_of|has_episodicity\b|\bepisodicity_of
+					
 					$relflag  = 1;
 					#print " \n got rela , $att : $hash_ref->{$att}, relflag : $relflag";
 				}
@@ -509,7 +509,7 @@ undef @siblings;
 
 =head1 SEE ALSO
 
-ValidateCUI.pm  GetUserData.pm  Query.pm  ws-getShortestPath.pl FindPaths.pm
+ValidateTerm.pm  GetUserData.pm  Query.pm  ws-getAllowablePath.pl 
 
 =cut
 

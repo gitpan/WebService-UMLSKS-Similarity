@@ -144,17 +144,17 @@ sub get_shortest_path_info
 			my @possible_path = @temp_path;
 			msg( "\n one of the paths found",$verbose);
 
-			msg( "\nValid path: @temp_path",$verbose);
+	#		msg( "\nValid path: @temp_path",$verbose);
 	
-			my $current_direction = 0;
+			my $current_direction = "X";
 			my $current_path_cost = getCost( \@possible_path );
 	
-			msg("\nValid path cost: $current_path_cost",$verbose);
+			#msg("\nValid path cost: $current_path_cost",$verbose);
 	
 			if ( $current_path_cost < $shortest_path_cost ) {
 				msg( "\n got shorter path than current one : @temp_path",$verbose);
 				$shortest_path_cost = $current_path_cost;
-				msg( "\n current cost is : $shortest_path_cost",$verbose);
+				#msg( "\n current cost is : $shortest_path_cost",$verbose);
 				$shortest_path_ref       = \@possible_path;
 				#@shortest_path_direction = @{getDirection( \@temp_path )};
 				
@@ -167,12 +167,12 @@ sub get_shortest_path_info
 	
 					# If current direction is not equal to previous direction, then
 					# increament the number of chnages in direction in current path.
-					if ( $current_direction != $direction ) {
+					if ( $current_direction ne $direction ) {
 						$change_in_direction++;
 						$current_direction = $direction;
 	
 					}
-					
+=comment				
 					if ( $direction == 1 ) {
 
 					$arrow_direction = "U";
@@ -188,8 +188,9 @@ sub get_shortest_path_info
 						$arrow_direction = "H";
 			
 					}
-					push( @shortest_path_direction, $arrow_direction );
-	
+=cut					
+					#push( @shortest_path_direction, $arrow_direction );
+						push( @shortest_path_direction, $direction );
 				}	
 			}
 			
@@ -200,7 +201,7 @@ sub get_shortest_path_info
 			if ( $link_node ~~ @temp_path ) {
 			}
 			else {
-				msg( "\n link node $link_node not in @temp_path",$verbose);
+				#msg( "\n link node $link_node not in @temp_path",$verbose);
 				my @new_path = ();
 	
 				#push(@temp_path,$link_node);
@@ -227,10 +228,10 @@ sub get_shortest_path_info
 					#push( @queue, $new_path_ref );			
 				
 					my $current_path_cost = getCost( \@new_path );
-					msg( "\npartial path cost for @new_path: $current_path_cost",$verbose);
+	#				msg( "\npartial path cost for @new_path: $current_path_cost",$verbose);
 					if ( $current_path_cost < $shortest_path_cost  ) {
-						msg(
-		"\npartial path cost is less than current shortest available path so push in queue",$verbose);
+	#					msg(
+	#	"\npartial path cost is less than current shortest available path so push in queue",$verbose);
 		
 						push( @queue, $new_path_ref );
 						#print "\n new queue : @queue";
@@ -240,12 +241,12 @@ sub get_shortest_path_info
 						undef $new_path_ref;
 						undef @new_path;
 						undef @temp_path;
-						msg(
-		"\n current partial path is greater than current shorter path so, ignore this path",$verbose);
+	#					msg(
+	#	"\n current partial path is greater than current shorter path so, ignore this path",$verbose);
 					}
 				}
 				else{
-					msg("\n path for link node $link_node : @new_path has path string $path_string which is not allowed", $verbose);
+	#				msg("\n path for link node $link_node : @new_path has path string $path_string which is not allowed", $verbose);
 				}
 			}
 		}
@@ -295,12 +296,13 @@ sub getCost
 		$direction = $graph{$first_node}{$next_node};
 
 		# If a parent or child relation then add the parent cost
-		if ( $direction =~ /\b1\b|\b2\b/ ) {
+		# changed the patterns regex
+		if ( $direction =~ /\bU\b|\bD\b/ ) {
 			$current_path_cost = $current_path_cost + 10;
 		}
 
 		# If a sibling relation then add the sibling cost
-		elsif ( $direction =~ /\b3\b/ ) {
+		elsif ( $direction =~ /\bH\b/ ) {
 			$current_path_cost = $current_path_cost + 20;
 		}
 

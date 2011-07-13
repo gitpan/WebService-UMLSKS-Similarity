@@ -1,4 +1,0 @@
-SAB :: include SNOMEDCT
-REL :: include RB,RN
-DIR :: include U,H
-RELA :: include RB-has_part,RN-part_of
