@@ -71,13 +71,13 @@ an allowable path. This options accepts a regex inside a file specified by patte
 
 The regex may be of form :
 
-/\b1+\b|\b1+2+\b|\b1+3+\b|\b1+3+2+\b|\b2+\b|\b2+3+\b|\b3+2+\b|\b3+\b/
+/\bU+\b|\bU+D+\b|\bU+H+\b|\bU+H+D+\b|\bD+\b|\bD+H+\b|\bH+D+\b|\bH+\b/
 
-1 : upward arrow
+U : upward arrow
 
-2: downward arrow
+D: downward arrow
 
-3: Horizontal arrow
+H: Horizontal arrow
 
 Each regex is seperated from another using | (or). Each regex represents one allowed pattern from the set.
 
@@ -85,7 +85,7 @@ Right now, the vector length of any size is allowed in the allowed direction,
 
 For example, 
 
-\b1+\b : means a path which consists of one or more than one upward arrows is allowed. 
+\bU+\b : means a path which consists of one or more than one upward arrows is allowed. 
 
 --testfile : User can specify the list of test CUIs stored in the test_file throught this option.
 The program would generate output for all the CUI pairs sequentially.

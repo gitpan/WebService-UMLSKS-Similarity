@@ -172,23 +172,7 @@ sub get_shortest_path_info
 						$current_direction = $direction;
 	
 					}
-=comment				
-					if ( $direction == 1 ) {
-
-					$arrow_direction = "U";
-
-					}
-					if ( $direction == 2 ) {
 			
-						$arrow_direction = "D";
-			
-					}
-					if ( $direction == 3 ) {
-			
-						$arrow_direction = "H";
-			
-					}
-=cut					
 					#push( @shortest_path_direction, $arrow_direction );
 						push( @shortest_path_direction, $direction );
 				}	
@@ -222,7 +206,7 @@ sub get_shortest_path_info
 				#msg( "\n link node $link_node not in @temp_path, so new path : @new_path : $path_string",$verbose);
 				if ( $path_string =~ m/$regex/ ) {
 					#msg("\nthere is allowed path between $source and $destination :", $verbose);
-					msg("\n path for link node $link_node : @new_path has path string $path_string which is allowed", $verbose);
+					#msg("\n path for link node $link_node : @new_path has path string $path_string which is allowed", $verbose);
 					
 					my $new_path_ref = \@new_path;
 					#push( @queue, $new_path_ref );			

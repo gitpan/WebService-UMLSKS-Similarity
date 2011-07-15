@@ -213,7 +213,8 @@ sub form_graph
 	my @path_direction = ();
 	
    # my $g = Graph::Directed->new; 
-	my $sibcount = 20; # only take first 20 neighbors
+	my $sibcount = 20; 
+	my $chdcount = 20;
 	my $sd = 0;
 	#until queue is empty
 	while ( $#queue != -1 ) {
@@ -315,7 +316,10 @@ sub form_graph
 			if($sibcount > $#sib){
 				$sibcount = $#sib;
 			}
-
+			if($chdcount > $#children){
+				$chdcount = $#children;
+			}
+			
 				
 			foreach my $p (@parents) {
 				unless ( $p ~~ %MetaCUIs ) {
@@ -325,15 +329,19 @@ sub form_graph
 					#$g->add_weighted_edge($p,$current_node, 2);
 				}
 			}
-			foreach my $c (@children) {
-				unless ( $c ~~ %MetaCUIs ) {
-					
-					$Graph{$current_node}{$c} = 'D';
-					$Graph{$c}{$current_node} = 'U';
-					#$g->add_edge($current_node,$c);
-					#$g->add_weighted_edge($c,$current_node, 1);
+		#	foreach my $c (@children) {
+			if ( $#children != -1 ) {
+				foreach my $c (0 .. $chdcount) {
+					unless ( $c ~~ %MetaCUIs ) {
+						
+						$Graph{$current_node}{$c} = 'D';
+						$Graph{$c}{$current_node} = 'U';
+						#$g->add_edge($current_node,$c);
+						#$g->add_weighted_edge($c,$current_node, 1);
+					}
 				}
 			}
+		#	}
 			if ( $#sib != -1 ) {
 				foreach my $s (0 .. $sibcount) {
 						
@@ -358,7 +366,7 @@ sub form_graph
 		#print "memory after forming graph for $current_node: ". memory_usage()/1024/1024 ."\n";
 		msg( "\n parents of $current_node : @parents",  $verbose );
 		msg( "\n siblings of $current_node : @sib",     $verbose );
-	#	msg( "\n children of $current_node: @children", $verbose );
+		msg( "\n children of $current_node: @children", $verbose );
 		if ( $#parents == -1 && $#sib == -1 && $#children == -1 ) {
 			msg("\n no neighbors at all",$verbose);
 			undef @parents;
