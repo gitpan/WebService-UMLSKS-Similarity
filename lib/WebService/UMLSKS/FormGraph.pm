@@ -216,9 +216,18 @@ sub form_graph
 	my $sibcount = 20; 
 	my $chdcount = 20;
 	my $sd = 0;
+	
+	use Time::HiRes qw(usleep ualarm gettimeofday tv_interval);	
+	
+	my $beforequeue = [gettimeofday];
+	
+		
+		
 	#until queue is empty
+	
 	while ( $#queue != -1 ) {
 
+		my $inqueue = [gettimeofday];
 		$sd++;
 		#print "inside while loop of queue , before poping element memory: ". memory_usage()/1024/1024 ."\n";
 		
@@ -259,11 +268,15 @@ sub form_graph
 			msg("\n no Info for $current_node",$verbose);
 			next;
 		}
-		
+		my $gcp_time = tv_interval($inqueue);
+		msg("\n after getConceptprop call : $gcp_time secs", $verbose);
 		
 		#prints*"memory after calling webservice for $current_node: ". memory_usage()/1024/1024 ."\n";
 		
-		
+		#use Time::HiRes qw(usleep ualarm gettimeofday tv_interval);	
+	
+		my $before_get_neighbors = [gettimeofday];
+	
 		
 		my $neighbors_info_ref =
 		  $read_parents->read_object( $neighbors_hash_ref, $current_node, $verbose,\%Directions,$a_ref);
@@ -275,6 +288,12 @@ sub form_graph
 		#print "\n neighbors_hahs_ref after undef $neighbors_hash_ref";
 		
 		#print "memory after undef neighbors_hash: ". memory_usage()/1024/1024 ."\n";
+		
+		my $getneibor_time = tv_interval($before_get_neighbors);
+		msg("\n after get neighbors call : $getneibor_time secs", $verbose);
+		
+		
+		my $updateHOH_nodecost = [gettimeofday];
 		
 		if (  $neighbors_info_ref eq 'empty' )
 		{
@@ -332,10 +351,10 @@ sub form_graph
 		#	foreach my $c (@children) {
 			if ( $#children != -1 ) {
 				foreach my $c (0 .. $chdcount) {
-					unless ( $c ~~ %MetaCUIs ) {
+					unless ( $children[$c] ~~ %MetaCUIs ) {
 						
-						$Graph{$current_node}{$c} = 'D';
-						$Graph{$c}{$current_node} = 'U';
+						$Graph{$current_node}{$children[$c]} = 'D';
+						$Graph{$children[$c]}{$current_node} = 'U';
 						#$g->add_edge($current_node,$c);
 						#$g->add_weighted_edge($c,$current_node, 1);
 					}
@@ -362,11 +381,12 @@ sub form_graph
 				}
 			}
 		}
-
+		msg("\n QUERYING $current_node", $verbose);
 		#print "memory after forming graph for $current_node: ". memory_usage()/1024/1024 ."\n";
 		msg( "\n parents of $current_node : @parents",  $verbose );
 		msg( "\n siblings of $current_node : @sib",     $verbose );
 		msg( "\n children of $current_node: @children", $verbose );
+		
 		if ( $#parents == -1 && $#sib == -1 && $#children == -1 ) {
 			msg("\n no neighbors at all",$verbose);
 			undef @parents;
@@ -481,8 +501,8 @@ sub form_graph
 
 		}
 
-
-		
+	my $graph_t = tv_interval($updateHOH_nodecost);
+	msg("\n Graph formation node cost update took : $graph_t secs\n",$verbose);	
 		#print "memory after updating node cost hash: ". memory_usage()/1024/1024 ."\n";
 		@queue = ();
 		foreach
@@ -509,7 +529,7 @@ sub form_graph
 		#@path_direction = ();
 
 		
-		msg ("\n Check if a shortest allowable path exists between source and destination",$verbose);
+		#msg ("\n Check if a shortest allowable path exists between source and destination",$verbose);
 	  # Check if a shortest allowable path exists between source and destination
 		my $get_path_info_result =
 		  $get_paths->get_shortest_path_info( \%subgraph, $term1, $term2,
@@ -577,6 +597,9 @@ sub form_graph
 
 	}
 
+	my $t0_t1 = tv_interval($beforequeue);
+	msg("\n while loop took : $t0_t1 secs\n",$verbose);	
+	
 	#print "memory after while loop ends: ". memory_usage()/1024/1024 ."\n";
 	if (@current_shortest_path) {
 		
@@ -591,6 +614,8 @@ sub form_graph
 		
 		##print "memory after undef concept info ref: ". memory_usage()/1024/1024 ."\n";
 		my $initial_relatedness =  $const_C - ($final_cost/10);
+		
+		msg( "\n IR : $initial_relatedness", $verbose );
 		
 		
 		#open(OUT,">>","inter_output.txt") or die("Error: cannot open file 'inter_output.txt'\n");
@@ -696,10 +721,10 @@ This subroutines queries webservice getConceptProperties
 		my $parents_ref;
 
 		$counter ++;
-		open(COUNT,">>","count.txt") or die("Error: cannot open file 'count.txt'\n");
+		#open(COUNT,">>","count.txt") or die("Error: cannot open file 'count.txt'\n");
 		
 		
-		print COUNT "\n call $counter : $cui ";
+		#print COUNT "\n call $counter : $cui ";
    # Creating object of query and passing the method name along with parameters.
 
 		my $query = WebService::UMLSKS::Query->new;

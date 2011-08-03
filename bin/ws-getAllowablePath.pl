@@ -512,11 +512,23 @@ if(defined $patterns_file && $patterns_file ne "")
 	chomp($allowable_regex);
 	$allowable_regex =~ s/\s*//g;
 	#my $regex;
+	
 	if($allowable_regex =~ m/^\// && $allowable_regex =~ m/\/$/)
 		{
-				msg( "\n regex is valid",$verbose);
+				msg( "\n regex has two backslashes",$verbose);
 				$allowable_regex =~  m/^\/(.*)\/$/;
 				$allowable_pattern_regex = $1;
+				my $valid = eval { qr/$allowable_pattern_regex/};
+	
+				if($@)
+				{
+					#print "\n false";
+					
+				}
+				else
+				{
+					#print "\n true";
+				}
 				msg ("\n regex extracted is : $allowable_pattern_regex", $verbose);
 		}
 		else

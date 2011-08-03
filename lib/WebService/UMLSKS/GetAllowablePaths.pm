@@ -94,6 +94,8 @@ sub get_shortest_path_info
 	$verbose = $ver;	
 	 %graph       = %$hash_ref;
 	
+	use Time::HiRes qw(usleep ualarm gettimeofday tv_interval);	
+	my $t0 = [gettimeofday];
 	
 	# Return array that contains information of shortest path if found.
 	my @shortest_path_info = ();
@@ -157,8 +159,10 @@ sub get_shortest_path_info
 				#msg( "\n current cost is : $shortest_path_cost",$verbose);
 				$shortest_path_ref       = \@possible_path;
 				#@shortest_path_direction = @{getDirection( \@temp_path )};
+				@shortest_path_direction = (); #....fixed bug here
+				my $arrow_direction = ""; #... forgot to have these two lines
 				
-				my $arrow_direction = "";
+				$change_in_direction = -1;
 
 				for my $i ( 0 .. $#temp_path - 1 ) {
 					my $first_node = $temp_path[$i];
@@ -206,7 +210,7 @@ sub get_shortest_path_info
 				#msg( "\n link node $link_node not in @temp_path, so new path : @new_path : $path_string",$verbose);
 				if ( $path_string =~ m/$regex/ ) {
 					#msg("\nthere is allowed path between $source and $destination :", $verbose);
-					#msg("\n path for link node $link_node : @new_path has path string $path_string which is allowed", $verbose);
+					msg("\n path for link node $link_node : @new_path has path string $path_string which is allowed", $verbose);
 					
 					my $new_path_ref = \@new_path;
 					#push( @queue, $new_path_ref );			
@@ -230,13 +234,17 @@ sub get_shortest_path_info
 					}
 				}
 				else{
-	#				msg("\n path for link node $link_node : @new_path has path string $path_string which is not allowed", $verbose);
+					msg("\n path for link node $link_node : @new_path has path string $path_string which is not allowed", $verbose);
 				}
 			}
 		}
 	}
 		#	print "\nmemory get_allpaths:after while loop ". memory_usage()/1024/1024 ."\n";	
 	undef %graph;	
+	
+	my $t0_t1 = tv_interval($t0);        
+	  msg("\n BFS took : $t0_t1 secs\n",$verbose);
+	  
 	if($shortest_path_ref ne "")
 	{
 		#$current_shortest_length = $path_cost / 10;

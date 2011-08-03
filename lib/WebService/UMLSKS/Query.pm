@@ -53,6 +53,9 @@ no warnings qw/redefine/;
 
 package WebService::UMLSKS::Query;
 
+
+use Log::Message::Simple qw[msg error debug];
+
 =head2 new
 
 This sub creates a new object of Query.
@@ -81,16 +84,28 @@ sub runQuery {
 	my $self        = shift;
 	my $service     = shift;
 	my $qterm = shift;
+	
 	my $method_name = shift;
 	my @params      = @_;
 
+	# added for debugging
+	my $verbose = 0;
 	#warn sprintf "----> %s(%s)\n", $method_name, join(', ', @params);
 
-
+ 	use Time::HiRes qw(usleep ualarm gettimeofday tv_interval);
+       
+	 #open(TIME,">>","time.txt") or die("Error: cannot open file 'time.txt'\n");
+	
+	my $t0 = [gettimeofday];
 	
 	# Calling the UMLSKS Web service and receiving the hash reference.
 	my $object_ref = $service->$method_name(@params);
 	
+	my $t0_t1 = tv_interval($t0);        
+	  msg("\n $qterm : $t0_t1 secs\n",$verbose);
+	  
+	 
+	  
 	# If the returned reference is not defined then display error message.
 	
 	if ( !defined $object_ref ) {
