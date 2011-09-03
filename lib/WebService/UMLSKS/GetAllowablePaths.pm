@@ -1,19 +1,31 @@
 =head1 NAME
 
-WebService::UMLSKS::GetAllowablePaths - Get an allowable shortest path between the input terms.
+WebService::UMLSKS::GetAllowablePaths - Get an allowable shortest path between the supplied terms.
 
 =head1 SYNOPSIS
 
 =head2 Basic Usage
 
-
-    use WebService::UMLSKS::GetAllowablePaths;
-
-    
+use WebService::UMLSKS::GetAllowablePaths;
+	
+%subgraph = graph formed by FormGraph module;
+	
+$regex = allowable pattern regex specified by configuaration;
+	
+# $term1 and $term2 are current pair of terms
+	
+my $get_paths    = WebService::UMLSKS::GetAllowablePaths->new;	
+	
+my $get_path_info_result = $get_paths->get_shortest_path_info( \%subgraph, $term1, $term2,$verbose, $regex );
+	
+# $get_path_info_result is an array reference which consists of path information.		
 
 =head1 DESCRIPTION
 
-Get an allowable shortest path between the input terms.
+Get an allowable shortest path between the input terms. This module uses a standard BFS
+graph algorithm with small modifications to accomodate the rules for allowable path.
+It calculates the shortest allowable path between any two terms supplied to it as a input with 
+a graph formed by FormGraph module.
 
 =head1 SUBROUTINES
 
@@ -78,7 +90,7 @@ sub new {
 
 =head2 get_shortest_path_info
 
-This sub returns the shortest path along with its cost
+This sub returns the shortest path along with its cost and number of changes in direction
 
 =cut
 
@@ -144,9 +156,10 @@ sub get_shortest_path_info
 
 		#	print "memory get_allpaths: one path found ". memory_usage()/1024/1024 ."\n";
 			my @possible_path = @temp_path;
+			
 			msg( "\n one of the paths found",$verbose);
 
-	#		msg( "\nValid path: @temp_path",$verbose);
+			msg( "\nValid path: @temp_path",$verbose);
 	
 			my $current_direction = "X";
 			my $current_path_cost = getCost( \@possible_path );
@@ -158,7 +171,7 @@ sub get_shortest_path_info
 				$shortest_path_cost = $current_path_cost;
 				#msg( "\n current cost is : $shortest_path_cost",$verbose);
 				$shortest_path_ref       = \@possible_path;
-				#@shortest_path_direction = @{getDirection( \@temp_path )};
+		#	@shortest_path_direction = @{getDirection( \@temp_path )};
 				@shortest_path_direction = (); #....fixed bug here
 				my $arrow_direction = ""; #... forgot to have these two lines
 				
@@ -234,7 +247,7 @@ sub get_shortest_path_info
 					}
 				}
 				else{
-					msg("\n path for link node $link_node : @new_path has path string $path_string which is not allowed", $verbose);
+				#	msg("\n path for link node $link_node : @new_path has path string $path_string which is not allowed", $verbose);
 				}
 			}
 		}
@@ -373,7 +386,7 @@ Ted Pedersen,                University of Minnesota Duluth
 
 =head1 COPYRIGHT
 
-Copyright (C) 2010, Mugdha Choudhari, Ted Pedersen
+Copyright (C) 2011, Mugdha Choudhari, Ted Pedersen
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

@@ -321,7 +321,7 @@ sub format_homogeneous_hash {
 					if($hash_ref->{$att} ~~ %directions){
 						if($hash_ref->{$att} ~~ @relationattr)
 						{
-							
+							#msg("relation is :$hash_ref->{$att}", $verbose );
 							$roflag = 1;
 							#print "\n roflag : $roflag";
 							$flag = 0;
@@ -355,7 +355,7 @@ sub format_homogeneous_hash {
 				if($hash_ref->{$att} ~~ @attribute){  
 					
 					$relflag  = 1;
-					#print " \n got rela , $att : $hash_ref->{$att}, relflag : $relflag";
+					#msg(" \n RELA : for term $current_term , $att : $hash_ref->{$att}",$verbose);
 				}
 			}
 			
@@ -369,13 +369,14 @@ sub format_homogeneous_hash {
 				}
 				if($t_flag == 1 && $accept_rela == 1){
 					#print "\n yehhhhhh got the rela I want";
+					
 					if(defined $hash_ref->{$att}){
 					if($hash_ref->{$att} =~ /^C[0-9]/){
 							
 							$current_cui = $hash_ref->{$att};
 							if(defined $current_cui){ #c 1
 								unless ($current_cui ~~ %ConceptInfo){
-									
+									#msg(" \n got rela , $att : $hash_ref->{$att}",$verbose);				
 									#print " \n inserting in hash $current_cui : $current_term";
 									$ConceptInfo{$current_cui} = $current_term;
 								}
@@ -527,7 +528,7 @@ Ted Pedersen,                University of Minnesota Duluth
 
 =head1 COPYRIGHT
 
-Copyright (C) 2010, Mugdha Choudhari, Ted Pedersen
+Copyright (C) 2011, Mugdha Choudhari, Ted Pedersen
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

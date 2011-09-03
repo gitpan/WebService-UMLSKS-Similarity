@@ -7,11 +7,30 @@ WebService::UMLSKS::FormGraph - Form a graph by accepting parents and siblings f
 
 =head2 Basic Usage
 
-    use WebService::UMLSKS::FormGraph;
+    use WebService::UMLSKS::FormGraph; 
+    use WebService::UMLSKS::GetUserData;   
+    
+    # Creating object of class GetUserData 
+	my $g = WebService::UMLSKS::GetUserData->new;
+    
+    $t1 = valid input CUI1;
+    $t2 = valid input CUI2;
+    $service = $g->getUserDetails($verbose);
+    @sources,@relations,@directions,@attributes = read from configuration;
+    $allowable_pattern_regex = read from pattern file;
+    $test_flag = 1 for testing else 0;
+   
+    my $return_val = 
+    form_graph-> form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions
+			,\@attributes,$allowable_pattern_regex,$test_flag);
 
 =head1 DESCRIPTION
 
-This module forms a graph.
+This module forms a graph of concepts connected to input concepts. It accepts the list of
+parents, children and siblings from GetNeighbors module. This module calls
+GetAllowablePaths module and finds the shortest allowable path between the input
+CUIs or concepts. It then calculates the semantic relatedness between the concepts 
+using the shortest allowable path information.
 
 =head1 SUBROUTINES
 
@@ -26,7 +45,8 @@ The subroutines are as follows:
 
 # Author  : Mugdha Choudhari
 
-# Description : this module makes a graph stored in form of hash of hash
+# Description : this module makes a graph stored in form of hash of hash and
+# calculates the semantic relatedness value between the input concepts.
 
 #use lib "/home/mugdha/UMLS-HSO/UMLS-HSO/WebService-UMLSKS-Similarity/lib";
 use warnings;
@@ -81,7 +101,7 @@ my $source;
 my $destination;
 my $tflag;
 my $verbose = 0;
-
+	
 
 # This sub creates a new object of FormGraph
 
@@ -100,13 +120,10 @@ sub new {
 
 
 
-
-
-
-
 =head2 form_graph
 
-This sub creates a new object of form_graph.
+This sub gets neighbors for the input concepts and forms graph. It also
+calculates the semantic relatedness between the concepts.
 
 =cut
 
@@ -234,7 +251,7 @@ sub form_graph
 		@parents = ();
 		@sib     = ();
 		@children = ();
-	#	printQueue( \@queue );
+		printQueue( \@queue );
 
 		#printHoH(\%Graph);
 
@@ -254,7 +271,7 @@ sub form_graph
 		}
 
 		
-		
+		msg("\n QUERYING $current_node", $verbose);
 		my %subgraph = %Graph;
 	
 		#msg("\n current node $current_node has a allowable shortest path from either source
@@ -329,6 +346,34 @@ sub form_graph
 			}
 
 			#$sibcount = $#sib; # keep all the neighbors
+			unless($current_node eq $source || $current_node eq $destination){
+			
+			my $sib_threshold = 200;
+			my $chd_threshold = 200;
+			
+			if($#sib > $sib_threshold || $#children > $chd_threshold)
+			{
+				msg( "\n parents of $current_node : @parents",  $verbose );
+		
+		
+				msg( "\n siblings of $current_node: @sib ",     $verbose );
+		
+		
+				msg( "\n children of $current_node: @children", $verbose );
+				
+				msg("\n should ignore $current_node as it would explode the graph",$verbose);
+				
+				#print STDERR "final output :-50<>$term1<>$term2\n";
+				#next;
+				#exit;
+				
+			}
+			
+			
+				
+		}
+			
+			
 			
 			# Check if sibcount is greater than actual #siblings, if yes,
 			# take actual siblings.
@@ -381,11 +426,31 @@ sub form_graph
 				}
 			}
 		}
-		msg("\n QUERYING $current_node", $verbose);
+		
+		#my %Concept = %$WebService::UMLSKS::GetNeighbors::ConceptInfo_ref;
+			
+		
 		#print "memory after forming graph for $current_node: ". memory_usage()/1024/1024 ."\n";
 		msg( "\n parents of $current_node : @parents",  $verbose );
-		msg( "\n siblings of $current_node : @sib",     $verbose );
+		for(my $par = 0 ; $par <  $#parents ; $par++)
+		{
+		#	msg("$parents[$par] [$Concept{$parents[$par]}", $verbose);
+		}
+		
+		
+		msg( "\n siblings of $current_node: @sib ",     $verbose );
+		for(my $par = 0 ; $par <  $#sib ; $par++)
+		{
+		#	msg("$sib[$par] [$Concept{$sib[$par]}", $verbose);
+		}
+		
+		
 		msg( "\n children of $current_node: @children", $verbose );
+		for(my $par = 0 ; $par <  $#children ; $par++)
+		{
+		#	msg("$children[$par] [$Concept{$children[$par]}", $verbose);
+		}
+		
 		
 		if ( $#parents == -1 && $#sib == -1 && $#children == -1 ) {
 			msg("\n no neighbors at all",$verbose);
@@ -549,6 +614,9 @@ sub form_graph
 			$final_cost = $current_available_cost;
 			
 			my $continue_searching = 0;
+			
+			# CHANGED ON 24 AUG TO CHECK
+			# recommented on 25 aug, as it is taking lot of time
 			#foreach my $key (keys %Directions){
 			#	if($Directions{$key} eq "H")
 			#	{
@@ -556,10 +624,12 @@ sub form_graph
 			#		$continue_searching = 1;
 			#	}
 			#}
+			#....
 			
-			#if($continue_searching == 0){
+			#if($continue_searching == 0){ #..
 				last;
-			#}
+			#}#...
+			
 			
 			
 		}
@@ -608,6 +678,7 @@ sub form_graph
 		undef %node_cost;
 		#print "memory after undef graph and node cost: ". memory_usage()/1024/1024 ."\n";
 		my %Concept = %$WebService::UMLSKS::GetNeighbors::ConceptInfo_ref;
+	
 		
 		undef ${WebService::UMLSKS::GetNeighbors::ConceptInfo_ref};
 		#print "memory after undef graph, concept_ref and node cost: ". memory_usage()/1024/1024 ."\n";
@@ -629,6 +700,7 @@ sub form_graph
 						(($const_k * $initial_relatedness) * $change_in_direction);
 
 		print "\n Final shortest path :";
+		
 		
 		for my $n (0 .. $#current_shortest_path) {
 			if($n < $#current_shortest_path){
@@ -652,8 +724,11 @@ sub form_graph
 		print "\n Final path cost : $final_cost";
 		msg( "\n Final path cost : $final_cost", $verbose );
 
-		print "\n Semantic relatedness : $semantic_relatedness";
-		msg( "\n Semantic relatednes : $semantic_relatedness", $verbose );
+		print "\n Changes in Direction : $change_in_direction";
+		msg( "\n Changes in Direction : $change_in_direction", $verbose );		
+
+		print "\n Semantic relatedness(hso) : $semantic_relatedness";
+		msg( "\n Semantic relatednes(hso) : $semantic_relatedness", $verbose );
 			
 		my @months = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);
 		my @weekDays = qw(Sun Mon Tue Wed Thu Fri Sat Sun);
@@ -849,7 +924,7 @@ Ted Pedersen,                University of Minnesota Duluth
 
 =head1 COPYRIGHT
 
-Copyright (C) 2010, Mugdha Choudhari, Ted Pedersen
+Copyright (C) 2011, Mugdha Choudhari, Ted Pedersen
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

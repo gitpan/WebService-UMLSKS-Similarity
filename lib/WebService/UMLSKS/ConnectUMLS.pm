@@ -168,7 +168,7 @@ Ted Pedersen,                University of Minnesota Duluth
 
 =head1 COPYRIGHT
 
-Copyright (C) 2010, Mugdha Choudhari, Ted Pedersen
+Copyright (C) 2011, Mugdha Choudhari, Ted Pedersen
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

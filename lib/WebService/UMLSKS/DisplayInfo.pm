@@ -186,10 +186,8 @@ sub format_homogeneous_hash {
 
 				}
 			}
-			else {
-
-				#-------------------------------------------------------------
-				#indent($indentation);
+			elsif($att !~ /\bCUI\b/) {
+			
 				print "\n";
 				indent($indentation);
 				if ( $att =~ /CN/ ) {
@@ -201,9 +199,6 @@ sub format_homogeneous_hash {
 				}
 				print ":";
 
-				#indent($indentation);
-				#print "\t";
-				#indent($indentation);
 				print $hash_ref->{$att};
 			
 			}
@@ -347,7 +342,7 @@ Ted Pedersen,                University of Minnesota Duluth
 
 =head1 COPYRIGHT
 
-Copyright (C) 2010, Mugdha Choudhari, Ted Pedersen
+Copyright (C) 2011, Mugdha Choudhari, Ted Pedersen
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

@@ -11,6 +11,18 @@ ws-getUMLSInfo
 
 #---------------------------------------------------------------------------------------------------------------------
 
+
+=head1 DESCRIPTION
+
+
+This program authenticates user by asking for valid username and password to connect to UMLSKS. Once the user is 
+authenticated he can enter different terms and CUIs and get back the information about them from the UMLSKS 
+Metathesaurus database. The program queries SNOMED-CT database with the term/CUI user enters and displays information
+like its source, CUI, definitions, etc. 
+
+=cut
+
+
 =head1 SYNOPSIS
 
 =head2 Basic Usuage
@@ -35,9 +47,9 @@ It takes complete path and name of the file. The config file is expected in foll
 
 =over
 
-=item SAB :: SNOMEDCT,MSH
+=item SAB :: include SNOMEDCT,MSH
 
-=item REL :: PAR
+=item REL :: include PAR
  
 =back 
 
@@ -74,21 +86,12 @@ Follwing is a sample output of the program
 
 =item SAB:MSH
 
-=item CUI:C0149931
+=item CUI/s associated:C0149931
 
 =item Enter query term/CUI:stop
 
 =back
 
-=head1 DESCRIPTION
-
-
-This program authenticates user by asking for valid username and password to connect to UMLSKS. Once the user is 
-authenticated he can enter different terms and CUIs and get back the information about them from the UMLSKS 
-Metathesaurus database. The program queries SNOMED-CT database with the term/CUI user enters and displays information
-like its source, CUI, definitions, etc. 
-
-=cut
 
 =head2 Modules/Packages
 
@@ -379,7 +382,7 @@ while ( $continue == 1 ) {
    # Creating object of query and passing the method name along with parameters.
 
 		my $query = WebService::UMLSKS::Query->new;
-		
+		my @cui_list = ();
 		
 		
 		
@@ -387,10 +390,10 @@ while ( $continue == 1 ) {
 # If the input entered by user is term, call findCUIByExact webservice, to get back the CUI.
 
 		if ( $isTerm_CUI eq 'term' ) {
-
+		my $cuilist;
 # following sub describes the details like the method name to be called, term to be searched etc.
 			$service->readable(1);
-			$cui = $query->runQuery(
+			$cuilist = $query->runQuery(
 				$service, $qterm,
 				'findCUIByExact',
 				{
@@ -414,7 +417,7 @@ while ( $continue == 1 ) {
 
 # runQuery returns undefined value if the entered term does not exist in the UMLS database.
 			
-			if (!$cui) {
+			if (!@$cuilist) {
 				print "Term/CUI does not exist in currently configured sources.";
 				next;
 			}
@@ -429,7 +432,8 @@ while ( $continue == 1 ) {
 				}
 				else {
 
-					$term = $cui;
+					@cui_list  = @$cuilist;
+					$term = $cui_list[0];
 
 					#print "now term is $cui";
 					$isTerm_CUI = 'cui';
@@ -479,6 +483,10 @@ while ( $continue == 1 ) {
 				print "\n  Query term:$qterm";
 				my $display_obj =  WebService::UMLSKS::DisplayInfo->new;
 				my $object_f = $display_obj->display_object($object_ref);
+				unless(!@cui_list){
+					print "\n    CUI/s associated : @cui_list";
+				}
+				print "\n";
 			}
 			
 			else
@@ -542,7 +550,7 @@ Ted Pedersen,                University of Minnesota Duluth
 
 =head1 COPYRIGHT
 
-Copyright (C) 2010, Mugdha Choudhari, Ted Pedersen
+Copyright (C) 2011, Mugdha Choudhari, Ted Pedersen
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

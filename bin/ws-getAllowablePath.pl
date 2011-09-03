@@ -11,13 +11,26 @@ ws-getAllowablePath
 
 #---------------------------------------------------------------------------------------------------------------------
 
+
+=head1 DESCRIPTION
+
+
+This program authenticates user by asking for valid username and password to connect to UMLSKS. Once the user is 
+authenticated program takes two terms from the user and finds the shortest path (semantic 
+distance) and the semantic relatedness(hso) between those two concepts using the heirarchical 
+structure of the UMLSKS Metathesaurus database. The program queries SNOMED-CT database with the CUIs user enters and displays the shortest
+path along with the concepts through which the two inputs are connected.
+
+ 
+=cut
+
 =head1 SYNOPSIS
 
-=head2 Basic Usuage
+=head2 Basic Usage
 
 =pod
 
-perl ws-getAllowablePath.pl --verbose 1 -sources SNOMEDCT,MSH --rels PAR --dirs U --config configfilename --login loginfile --patterns patternsfile --testfile test_file
+perl ws-getAllowablePath.pl --verbose 1 -sources SNOMEDCT,MSH --rels PAR --dirs U --config configfilename --login loginfile --log logfile --patterns patternsfile --testfile test_file
 
 --verbose: Sets verbose flag to true if value is set to 1, and thus displays all the authentication information for the user.
 
@@ -65,6 +78,9 @@ It takes complete path and name of the file. The config file is expected in foll
 =item password :: pqr
  
 =back
+
+--log : User can spacify the logfile name in which the log will be recorded.
+--verbose option must be set on to have log generated.
  
 --patterns : User can specify the set of allowable patterns that should be used while calculating
 an allowable path. This options accepts a regex inside a file specified by patternsfile.
@@ -98,36 +114,25 @@ Follwing is a sample output
 
 =item Enter password: 
 
-=item Enter first query CUI:C0229962
+=item Enter first query CUI:C0013378
 
-=item Enter second query CUI:C1623497
+=item Enter second query CUI:C0011167
 
-=item UMLS Source(s) used: SNOMED-CT
+=item First input is a CUI: C0013378
 
-=item UMLS Relation(s) used: PAR
+=item Second input is a CUI: C0011167
 
-=item Source is : C0229962, Destination is: C1623497
+=item  Final shortest path :Dysgeusia (C0013378) (U)->Taste Perception (C0039336) (U)->Special sensory functions (C0730359) (U)->Esthesia (C0036658) (U)->Nervous System Physiological Phenomena (C0027767) (U)->Function (C0542341) (D)->Digestion (C0012238) (D)->Oral cavity AND/OR esophageal function (C1268925) (D)->Deglutition (C0011167) 
 
-=item path is->Body part (C0229962)->Body Regions (C0005898)->Anatomic structures (C0700276)->Physical anatomical entity (C0506706)->Body structure (C1268086)->SNOMED CT (C1623497)
-C1879289 C1616556
+=item Final path cost : 80
 
+=item Changes in Direction : 1
+
+=item Semantic relatedness(hso) : 9
 
 =item Enter first query CUI:stop
 
 =back
-
-
-=head1 DESCRIPTION
-
-
-This program authenticates user by asking for valid username and password to connect to UMLSKS. Once the user is 
-authenticated program takes two terms from the user and finds the shortest path (semantic 
-distance) between those two concepts using the heirarchical 
-structure of the UMLSKS Metathesaurus database. The program queries SNOMED-CT database with the CUIs user enters and displays the shortest
-path along with the concepts through which the two inputs are connected.
-It also displays the UMLS relations and sources used to find the path.
- 
-=cut
 
 =head2 Modules/Packages
 
@@ -446,7 +451,7 @@ if(defined $login_file && $login_file ne "")
 	my $pwd = "";
 	
 	open( LOGIN, $login_file )
-		  or die("Error: cannot open configuration file '$login_file'\n");
+		  or die("Error: cannot open  file '$login_file'\n");
 
 		my @login_details = <LOGIN>;
 		foreach my $detail (@login_details){
@@ -504,7 +509,7 @@ if(defined $patterns_file && $patterns_file ne "")
 {
 
 	open( PATTERN, $patterns_file )
-		  or die("Error: cannot open configuration file '$patterns_file'\n");
+		  or die("Error: cannot open file '$patterns_file'\n");
 	
 	my @p = <PATTERN>;
 	my $allowable_regex = $p[0];
@@ -553,7 +558,10 @@ else
    # horizontal arrows.
 	
    #$allowable_pattern_regex = '\b1+\b|\b1+2+\b|\b1+3+\b|\b1+3+2+\b|\b2+\b|\b2+3+\b|\b3+2+\b|\b3+\b';
-    $allowable_pattern_regex = '\bU+\b|\bU+D+\b|\bU+H+\b|\bU+H+D+\b|\bD+\b|\bD+H+\b|\bH+D+\b|\bH+\b';
+   $allowable_pattern_regex = '\bU+\b|\bU+D+\b|\bU+H+\b|\bU+H+D+\b|\bD+\b|\bD+H+\b|\bH+D+\b|\bH+\b';
+   # $allowable_pattern_regex =
+    #'\bU{1,5}\b|\bU{1,5}D{1,5}\b|\bU{1,5}H{1,5}\b|\bU{1,5}H{1,5}D{1,5}\b|\bD{1,5}\b|\bD{1,5}H{1,5}\b|\bH{1,5}D{1,5}\b|\bH{1,5}\b';
+    
 }
 
 
@@ -835,7 +843,7 @@ Ted Pedersen,                University of Minnesota Duluth
 
 =head1 COPYRIGHT
 
-Copyright (C) 2010, Mugdha Choudhari, Ted Pedersen
+Copyright (C) 2011, Mugdha Choudhari, Ted Pedersen
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

@@ -11,6 +11,16 @@ ws-sample
 
 #---------------------------------------------------------------------------------------------------------------------
 
+
+=head1 DESCRIPTION
+
+This a sample program which shows the flow of the complete package and how different modules interact with each other.
+This program authenticates user by asking for valid username and password to connect to UMLSKS. Once the user is 
+authenticated program takes a term from the user and finds CUI using the UMLSKS Metathesaurus database.
+The program queries SNOMED-CT database.
+
+=cut
+
 =head1 SYNOPSIS
 
 =head2 Basic Usuage
@@ -29,16 +39,10 @@ Follwing is a sample output
 
 =item Enter query term : hair
 
-=item CUI for term hair is : C0018494
+=item CUI/s for term hair is : C0018494
 
 =back
 
-
-=head1 DESCRIPTION
-
-This a sample program which shows the flow of the complete package and how different modules interact with each other.
-This program authenticates user by asking for valid username and password to connect to UMLSKS. Once the user is 
-authenticated program takes a term from the user and finds CUI using the UMLSKS Metathesaurus database. The program queries SNOMED-CT database.
 
 =cut
 
@@ -76,6 +80,9 @@ my $verbose = 1;
 my $g       = WebService::UMLSKS::GetUserData->new;
 my $service = $g->getUserDetails($verbose);
 
+if($service == 0){
+	exit;
+}
 
 # Creating Connect object to call sub get_pt while forming a query.
 
@@ -101,13 +108,13 @@ print "\nEnter query term:";
 
 		my $query = WebService::UMLSKS::Query->new;
 		
-		my $cui;
+		my $cuilist;
 
 # Following sub describes the details like the method name to be called, term to be searched etc.
 # Using default source SNOMECT to get the CUI back.
 
 			$service->readable(1);
-			$cui = $query->runQuery(
+			$cuilist = $query->runQuery(
 				$service, $term,
 				'findCUIByExact',
 				{
@@ -124,7 +131,7 @@ print "\nEnter query term:";
 				},
 			);
 
-print "\nCUI for term $term is : $cui\n";
+print "\nCUI/s for term $term : @$cuilist\n";
 
 # Serialization subroutines
 
@@ -165,7 +172,7 @@ Ted Pedersen,                University of Minnesota Duluth
 
 =head1 COPYRIGHT
 
-Copyright (C) 2010, Mugdha Choudhari, Ted Pedersen
+Copyright (C) 2011, Mugdha Choudhari, Ted Pedersen
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

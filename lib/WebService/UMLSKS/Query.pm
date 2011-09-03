@@ -137,7 +137,7 @@ sub runQuery {
 		else {
 
 			if ( $method_name =~ /findCUIByExact/ ) {
-
+			my @cuilist = ();
 			#c 1#	$contents_ref = $object_ref->{"contents"};
 				foreach my $val (@$contents_ref) {
 					while ( my ( $key, $value ) = each(%$val) ) {
@@ -145,18 +145,26 @@ sub runQuery {
 							my $cui = $value;
 							if($cui)
 							{
-								
-								return $cui;
+							push(@cuilist,$cui);	
+							#	return $cui;
 								
 							}
-							else
-							{
-								return 'empty';
-							}
+							#else
+							#{
+							#	return 'empty';
+							#}
 							
 						}
 					}
 				}
+				if($#cuilist != -1){
+					return \@cuilist;
+				}
+				else
+				{
+					return 'empty';
+				}
+				
 			}
 			else {
 				
@@ -284,7 +292,7 @@ Ted Pedersen,                University of Minnesota Duluth
 
 =head1 COPYRIGHT
 
-Copyright (C) 2010, Mugdha Choudhari, Ted Pedersen
+Copyright (C) 2011, Mugdha Choudhari, Ted Pedersen
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

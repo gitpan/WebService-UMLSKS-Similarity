@@ -89,19 +89,20 @@ use strict;
 
 
 my $test_file ;
-my $config_file;
-my $login_file;
+my $c_file;
+my $l_file;
+my $patterns_file;
 
-GetOptions( 'testfile=s' => \$test_file, 'config=s' => \$config_file, 'login=s' => \$login_file);
+GetOptions( 'testfile=s' => \$test_file, 'config=s' => \$c_file, 'login=s' => \$l_file, 'pattern=s' => \$patterns_file);
 
-if($test_file eq "" || $login_file  eq "" || $config_file eq "")
+if($test_file eq "" || $l_file  eq "" || $c_file eq "" || $patterns_file eq "")
 {
-	print "\n Please specify options --testfile, --login and --config for testing\n";
+	print "\n Please specify options --testfile, --login , --config and --pattern for testing\n";
 	exit;
 }
 
 
-if($test_file ne "" && $config_file ne "" && $login_file ne ""){
+if($test_file ne "" && $c_file ne "" && $l_file ne "" && $patterns_file ne ""){
 	
 	open(MYDATA, $test_file) or  die("Error: cannot open file 'data.txt'\n");
 	
@@ -110,11 +111,11 @@ if($test_file ne "" && $config_file ne "" && $login_file ne ""){
 	open(OUTPUT,">","output.txt") or die("Error: cannot open file 'output.txt'\n");
 	close OUTPUT;
 	
-	open(TIME,">","time.txt") or die("Error: cannot open file 'time.txt'\n");
-	close TIME;
+	#open(TIME,">","time.txt") or die("Error: cannot open file 'time.txt'\n");
+	#close TIME;
 	
-	open(OUT,">","inter_output.txt") or die("Error: cannot open file 'inter_output.txt'\n");
-	close OUT;
+	#open(OUT,">","inter_output.txt") or die("Error: cannot open file 'inter_output.txt'\n");
+	#close OUT;
 		
 	my $line;
 	
@@ -129,8 +130,7 @@ if($test_file ne "" && $config_file ne "" && $login_file ne ""){
 	  	$query2 =~ s/\s*//g;
 	
 	  # Call getAllowable.pl for each CUI pair in the test file.
-	  
-	  system("/usr/bin/perl ws-getAllowablePath.pl --input1 $query1 --input2 $query2 --login $login_file --config $config_file");
+system("/usr/bin/perl ws-getAllowablePath.pl --input1 $query1 --input2 $query2 --login $l_file --config $c_file --patterns $patterns_file");
 	  
 	
 	  
@@ -164,7 +164,7 @@ Ted Pedersen,                University of Minnesota Duluth
 
 =head1 COPYRIGHT
 
-Copyright (C) 2010, Mugdha Choudhari, Ted Pedersen
+Copyright (C) 2011, Mugdha Choudhari, Ted Pedersen
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
