@@ -157,9 +157,9 @@ sub get_shortest_path_info
 		#	print "memory get_allpaths: one path found ". memory_usage()/1024/1024 ."\n";
 			my @possible_path = @temp_path;
 			
-			msg( "\n one of the paths found",$verbose);
+			#msg( "\n one of the paths found",$verbose);
 
-			msg( "\nValid path: @temp_path",$verbose);
+			#msg( "\nValid path: @temp_path",$verbose);
 	
 			my $current_direction = "X";
 			my $current_path_cost = getCost( \@possible_path );
@@ -223,7 +223,7 @@ sub get_shortest_path_info
 				#msg( "\n link node $link_node not in @temp_path, so new path : @new_path : $path_string",$verbose);
 				if ( $path_string =~ m/$regex/ ) {
 					#msg("\nthere is allowed path between $source and $destination :", $verbose);
-					msg("\n path for link node $link_node : @new_path has path string $path_string which is allowed", $verbose);
+					#msg("\n path for link node $link_node : @new_path has path string $path_string which is allowed", $verbose);
 					
 					my $new_path_ref = \@new_path;
 					#push( @queue, $new_path_ref );			

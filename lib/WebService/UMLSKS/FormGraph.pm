@@ -142,6 +142,8 @@ sub form_graph
 	my $a_ref   = shift;
 	my $regex   = shift;
 	my $test_flag = shift;
+	my $sib_threshold = shift;
+	my $chd_threshold = shift;
 
 	#my $rel_attribute = "due_to";
 
@@ -239,11 +241,14 @@ sub form_graph
 	my $beforequeue = [gettimeofday];
 	
 		
+	msg("Child threshold : $chd_threshold and sibling threshold : $sib_threshold", $verbose);	
 		
 	#until queue is empty
 	
 	while ( $#queue != -1 ) {
-
+		
+		msg("\nsize of queue : $#queue", $verbose);
+		
 		my $inqueue = [gettimeofday];
 		$sd++;
 		#print "inside while loop of queue , before poping element memory: ". memory_usage()/1024/1024 ."\n";
@@ -272,6 +277,8 @@ sub form_graph
 
 		
 		msg("\n QUERYING $current_node", $verbose);
+			msg("\nsize of queue : $#queue", $verbose);
+			
 		my %subgraph = %Graph;
 	
 		#msg("\n current node $current_node has a allowable shortest path from either source
@@ -345,27 +352,68 @@ sub form_graph
 				@sib = @{$s_ref};
 			}
 
+			if($current_node eq $source || $current_node eq $destination)
+			{
+				if($#sib > $sib_threshold || $#children > $chd_threshold)
+				{
+					print STDERR "final output :-500<>$term1<>$term2\n";
+				
+					exit;
+					
+				}
+				
+			}
+		
 			#$sibcount = $#sib; # keep all the neighbors
+		
+		msg("\n number of parents : $#parents", $verbose);
+		
+		msg( "\n parents of $current_node : @parents",  $verbose );
+		for(my $par = 0 ; $par <  $#parents ; $par++)
+		{
+		#	msg("$parents[$par] [$Concept{$parents[$par]}", $verbose);
+		}
+		
+		msg("\n number of siblings : $#sib", $verbose);
+		
+		msg( "\n siblings of $current_node: @sib ",     $verbose );
+		for(my $par = 0 ; $par <  $#sib ; $par++)
+		{
+		#	msg("$sib[$par] [$Concept{$sib[$par]}", $verbose);
+		}
+		
+		msg("\n number of children : $#children", $verbose);
+		
+		msg( "\n children of $current_node: @children", $verbose );
+		for(my $par = 0 ; $par <  $#children ; $par++)
+		{
+		#	msg("$children[$par] [$Concept{$children[$par]}", $verbose);
+		}
+		
+		
+		
+		
+		
 			unless($current_node eq $source || $current_node eq $destination){
+		
 			
-			my $sib_threshold = 200;
-			my $chd_threshold = 200;
+		
 			
 			if($#sib > $sib_threshold || $#children > $chd_threshold)
 			{
-				msg( "\n parents of $current_node : @parents",  $verbose );
+		#		msg( "\n parents of $current_node : @parents",  $verbose );
 		
 		
-				msg( "\n siblings of $current_node: @sib ",     $verbose );
+		#		msg( "\n siblings of $current_node: @sib ",     $verbose );
 		
 		
-				msg( "\n children of $current_node: @children", $verbose );
+		#		msg( "\n children of $current_node: @children", $verbose );
 				
 				msg("\n should ignore $current_node as it would explode the graph",$verbose);
 				
-				#print STDERR "final output :-50<>$term1<>$term2\n";
+				print STDERR "final output :-50<>$term1<>$term2\n";
 				#next;
-				#exit;
+				exit;
 				
 			}
 			
@@ -377,12 +425,12 @@ sub form_graph
 			
 			# Check if sibcount is greater than actual #siblings, if yes,
 			# take actual siblings.
-			if($sibcount > $#sib){
+			#if($sibcount > $#sib){
 				$sibcount = $#sib;
-			}
-			if($chdcount > $#children){
+			#}
+			#if($chdcount > $#children){
 				$chdcount = $#children;
-			}
+			#}
 			
 				
 			foreach my $p (@parents) {
@@ -431,25 +479,6 @@ sub form_graph
 			
 		
 		#print "memory after forming graph for $current_node: ". memory_usage()/1024/1024 ."\n";
-		msg( "\n parents of $current_node : @parents",  $verbose );
-		for(my $par = 0 ; $par <  $#parents ; $par++)
-		{
-		#	msg("$parents[$par] [$Concept{$parents[$par]}", $verbose);
-		}
-		
-		
-		msg( "\n siblings of $current_node: @sib ",     $verbose );
-		for(my $par = 0 ; $par <  $#sib ; $par++)
-		{
-		#	msg("$sib[$par] [$Concept{$sib[$par]}", $verbose);
-		}
-		
-		
-		msg( "\n children of $current_node: @children", $verbose );
-		for(my $par = 0 ; $par <  $#children ; $par++)
-		{
-		#	msg("$children[$par] [$Concept{$children[$par]}", $verbose);
-		}
 		
 		
 		if ( $#parents == -1 && $#sib == -1 && $#children == -1 ) {
@@ -577,24 +606,16 @@ sub form_graph
 				push( @queue, $key );
 			}
 		}
-		#print "memory after sorting queue: ". memory_usage()/1024/1024 ."\n";
-		#	if($#queue > 50)
-		#	{
-		#		print "\n Taking too long to find path.. so exiting!";
-		#		exit;
-		#	}
+		
+		
+			msg("\nsize of queue after adding neighbors: $#queue", $verbose);
+		
+		
 
 		#my %subgraph = %Graph;
 		%subgraph = %Graph;
 	
-		#print "memory after forming subgraph as copy of graph: ". memory_usage()/1024/1024 ."\n";	
 		
-
-		#@current_shortest_path = ();
-		#@path_direction = ();
-
-		
-		#msg ("\n Check if a shortest allowable path exists between source and destination",$verbose);
 	  # Check if a shortest allowable path exists between source and destination
 		my $get_path_info_result =
 		  $get_paths->get_shortest_path_info( \%subgraph, $term1, $term2,
@@ -657,14 +678,6 @@ sub form_graph
 		}
 	
 
-		
-		#msg( "\n current shortest path between source and dest : @current_shortest_path", $verbose );
-
-		#msg( "\n current available path cost between source and destination : $current_available_cost",
-		#	$verbose );
-		#msg( "\n current available path direction between source and dest: @path_direction",
-		#	$verbose );	
-
 	}
 
 	my $t0_t1 = tv_interval($beforequeue);
@@ -674,25 +687,19 @@ sub form_graph
 	if (@current_shortest_path) {
 		
 		undef %Graph;
-		#undef $g;
+		
 		undef %node_cost;
-		#print "memory after undef graph and node cost: ". memory_usage()/1024/1024 ."\n";
+	
 		my %Concept = %$WebService::UMLSKS::GetNeighbors::ConceptInfo_ref;
 	
 		
 		undef ${WebService::UMLSKS::GetNeighbors::ConceptInfo_ref};
-		#print "memory after undef graph, concept_ref and node cost: ". memory_usage()/1024/1024 ."\n";
 		
-		##print "memory after undef concept info ref: ". memory_usage()/1024/1024 ."\n";
 		my $initial_relatedness =  $const_C - ($final_cost/10);
 		
 		msg( "\n IR : $initial_relatedness", $verbose );
 		
 		
-		#open(OUT,">>","inter_output.txt") or die("Error: cannot open file 'inter_output.txt'\n");
-		
-		#print OUT "$initial_relatedness $change_in_direction\n";
-		#close OUT;
 		if($change_in_direction == -1){
 			$change_in_direction = 0;
 		}
@@ -727,7 +734,7 @@ sub form_graph
 		print "\n Changes in Direction : $change_in_direction";
 		msg( "\n Changes in Direction : $change_in_direction", $verbose );		
 
-		print "\n Semantic relatedness(hso) : $semantic_relatedness";
+		print "\n Semantic relatedness(hso) : $semantic_relatedness\n";
 		msg( "\n Semantic relatednes(hso) : $semantic_relatedness", $verbose );
 			
 		my @months = qw(Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec);

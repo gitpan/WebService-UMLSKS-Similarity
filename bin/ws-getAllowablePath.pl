@@ -231,11 +231,13 @@ my $login_file = '';
 my $test_file = '';
 my $input1 = '';
 my $input2 = '';
+my $chd_threshold = '';
+my $sib_threshold = '';
 
 
 GetOptions( 'verbose:i' => \$verbose , 'sources=s' => \$sources , 'rels=s' =>\$relations, 'dirs=s' =>\$directions,
  'config=s' =>\$config_file, 'log=s' => \$log_file, 'login=s' => \$login_file ,'patterns=s' => \$patterns_file, 
- 'testfile=s' => \$test_file, 'input1=s' => \$input1, 'input2=s'=>\$input2);
+ 'testfile=s' => \$test_file, 'input1=s' => \$input1, 'input2=s'=>\$input2,'chd_threshold=s' => \$chd_threshold, 'sib_threshold=s'=>\$sib_threshold);
 
 # Reference for use of Log package
 # http://perldoc.perl.org/Log/Message/Simple.html#msg(%22message-string%22-%5b%2cVERBOSE%5d)
@@ -501,6 +503,14 @@ if ( $service == 0 ) {
 	$continue = 0;
 }
 
+if($chd_threshold eq ""){
+	$chd_threshold = 10000;
+}
+
+if($sib_threshold eq ""){
+	$sib_threshold = 10000;
+}
+
 
 # If allowable patterns are specified by user using the patterns_file then,
 # set the regex from the file
@@ -756,7 +766,7 @@ while ( $continue == 1 ) {
 		
 			msg("\n before calling form grpah : regex: $allowable_pattern_regex", $verbose);
 			my $return_val = $form_graph->
-			form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions,\@attributes,$allowable_pattern_regex,$test_flag);
+			form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions,\@attributes,$allowable_pattern_regex,$test_flag, $sib_threshold,$chd_threshold);
 			if($return_val eq 'same'){
 			next;
 			}			
@@ -781,8 +791,8 @@ while ( $continue == 1 ) {
 						my $t1 = $allCUIOfTerm1[$i];
 						my $t2 = $allCUIOfTerm2[$j];
 						print "\n\nterm 1 : $t1 term 2 : $t2";
-						my $return_val = 
-						$form_graph->form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions,\@attributes,$allowable_pattern_regex,$test_flag);
+						my $return_val = $form_graph->
+						form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions,\@attributes,$allowable_pattern_regex,$test_flag, $sib_threshold,$chd_threshold);
 						if($return_val eq 'same'){
 							print "\n $t1 and $t2 are same";
 							next;
@@ -801,7 +811,7 @@ while ( $continue == 1 ) {
 			 	 $t2 = $allCUIOfTerm2[0];
 			
 				my $return_val = $form_graph->
-				form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions,\@attributes,$allowable_pattern_regex,$test_flag);
+				form_graph($t1,$t2,$service, $verbose, \@sources, \@relations,\@directions,\@attributes,$allowable_pattern_regex,$test_flag, $sib_threshold,$chd_threshold);
 				if($return_val eq 'same'){
 					next;
 				}			
