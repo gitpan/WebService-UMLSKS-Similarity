@@ -21,4 +21,4 @@ requires:
   Crypt::SSLeay: 0
   SOAP::Lite: 0.71
   Test::More: 0
-version: 0.22
+version: 0.23

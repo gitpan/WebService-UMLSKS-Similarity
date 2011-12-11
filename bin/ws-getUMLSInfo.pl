@@ -416,8 +416,8 @@ while ( $continue == 1 ) {
 			
 
 # runQuery returns undefined value if the entered term does not exist in the UMLS database.
-			
-			if (!@$cuilist) {
+		
+			if ($cuilist eq "empty") {
 				print "Term/CUI does not exist in currently configured sources.";
 				next;
 			}
